@@ -1,4 +1,4 @@
-import { IUser, IUserRegistration } from '../types/user.types';
+import { IUser, IUserRegistration, UserRole } from '../types/user.types';
 import User from '../models/User';
 
 export class UserRepository {
@@ -22,5 +22,23 @@ export class UserRepository {
   async delete(id: string): Promise<boolean> {
     const result = await User.findByIdAndDelete(id);
     return !!result;
+  }
+
+  async getAllUsers(): Promise<IUser[]> {
+    return await User.find({}, { password: 0 }); // Exclude password from results
+  }
+
+  async updateRole(userId: string, newRole: UserRole): Promise<IUser> {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role: newRole },
+      { new: true }
+    );
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return user;
   }
 } 

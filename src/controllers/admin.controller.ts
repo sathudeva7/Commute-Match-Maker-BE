@@ -1,28 +1,27 @@
 import { Request, Response } from 'express';
-import { UserService } from '../services/user.service';
-import { IUserRegistration, IUserLogin } from '../types/user.types';
+import { UserRepository } from '../repositories/user.repository';
+import { UserRole } from '../types/user.types';
 import { AppError } from '../utils/appError';
 import { ApiResponse } from '../types/response.types';
 
-export class UserController {
-  private userService: UserService;
+export class AdminController {
+  private userRepository: UserRepository;
 
   constructor() {
-    this.userService = new UserService();
+    this.userRepository = new UserRepository();
   }
 
-  register = async (req: Request, res: Response): Promise<void> => {
+  getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userData: IUserRegistration = req.body;
-      const result = await this.userService.register(userData);
+      const users = await this.userRepository.getAllUsers();
       
       const response: ApiResponse = {
         success: true,
-        result,
-        message: 'User registered successfully'
+        result: users,
+        message: 'Users retrieved successfully'
       };
       
-      res.status(201).json(response);
+      res.status(200).json(response);
     } catch (error) {
       if (error instanceof AppError) {
         const response: ApiResponse = {
@@ -42,15 +41,21 @@ export class UserController {
     }
   };
 
-  login = async (req: Request, res: Response): Promise<void> => {
+  updateUserRole = async (req: Request, res: Response): Promise<void> => {
     try {
-      const loginData: IUserLogin = req.body;
-      const result = await this.userService.login(loginData);
+      const { userId } = req.params;
+      const { role } = req.body;
+
+      if (!Object.values(UserRole).includes(role)) {
+        throw new AppError('Invalid role specified', 400);
+      }
+
+      const updatedUser = await this.userRepository.updateRole(userId, role);
       
       const response: ApiResponse = {
         success: true,
-        result,
-        message: 'Login successful'
+        result: updatedUser,
+        message: 'User role updated successfully'
       };
       
       res.status(200).json(response);

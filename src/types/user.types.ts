@@ -1,5 +1,11 @@
 import { Request } from 'express';
 
+export enum UserRole {
+  USER = 'user',
+  MODERATOR = 'moderator',
+  ADMIN = 'admin'
+}
+
 export interface IUser {
   _id?: string;
   full_name: string;
@@ -10,12 +16,14 @@ export interface IUser {
   profile_image_url?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  role: UserRole;
 }
 
 export interface IUserRegistration {
   full_name: string;
   email: string;
   password: string;
+  role?: UserRole; // Optional, defaults to USER
 }
 
 export interface IUserLogin {
