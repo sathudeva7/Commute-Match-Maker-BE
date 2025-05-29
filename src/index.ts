@@ -5,6 +5,7 @@ dotenv.config(); // Load environment variables first
 import express, { Express, Request, Response, NextFunction } from 'express';
 import './config/db'; // Initializes DB connection and logs connection status
 import userRoutes from './routes/user.routes';
+import adminRoutes from './routes/admin.routes';
 import { ApiResponse } from './types/response.types';
 
 const app: Express = express();
@@ -19,6 +20,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

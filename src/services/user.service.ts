@@ -76,10 +76,10 @@ export class UserService {
   }
 
   private sanitizeUser(user: IUser): IUser {
-    const { password, full_name, email, _id } = user;
+    const { password, full_name, email, _id, role } = user;
 
     return {
-	full_name, email, _id
+	full_name, email, _id, role
     };
   }
 } 
