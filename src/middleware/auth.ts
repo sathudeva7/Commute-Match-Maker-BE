@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../utils/appError';
 import { UserRepository } from '../repositories/user.repository';
-import { AuthenticatedRequest } from '../types/user.types';
+import { AuthenticatedRequest, UserRole } from '../types/user.types';
 
 export const authenticate = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
@@ -29,4 +29,18 @@ export const authenticate = async (req: AuthenticatedRequest, res: Response, nex
       next(error);
     }
   }
+};
+
+export const authorizeRole = (roles: UserRole[]) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    if (!roles.includes(req.user.role)) {
+      throw new AppError('Insufficient permissions', 403);
+    }
+
+    next();
+  };
 }; 
