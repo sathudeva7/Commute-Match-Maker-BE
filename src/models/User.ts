@@ -8,20 +8,11 @@ const UserSchema = new mongoose.Schema({
   oauth_id: { type: String },
   profile_image_url: { type: String },
   bio: { type: String },
-  profession: {
-	type: String,
-   },
-   languages: {
-	type: [String], // ['English', 'Tamil']
-	default: [],
-   },
-   interests: {
-	type: [String], // ['Tech', 'Football']
-	default: [],
-   },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
 
-const User = mongoose.model('User', UserSchema);
+
+const User = mongoose.model<any>('User', UserSchema);
 
 export default User;

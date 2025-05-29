@@ -1,6 +1,8 @@
 // src/config/db.ts
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import User from '../models/User';
+import UserMatchingPreferences from '../models/UserMatchingPreferences';
 
 dotenv.config(); // To load .env variables
 
@@ -28,5 +30,7 @@ const Example = mongoose.model('Example', ExampleSchema);
 
 export default {
   mongoose,
-  Example
+  Example,
+  User,
+  UserMatchingPreferences
 };
