@@ -4,17 +4,22 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/index.ts",
-    "dev": "nodemon --watch src --exec \"npx ts-node src/index.ts\""
+    "start": "node init && ts-node src/index.ts",
+    "dev": "node init && nodemon --watch src --exec \"npx ts-node src/index.ts\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/jsonwebtoken": "^9.0.9",
+    "bcryptjs": "^3.0.2",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "mongoose": "^8.15.1"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.15.1",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "@types/express": "^5.0.2",
