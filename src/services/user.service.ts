@@ -79,7 +79,30 @@ export class UserService {
     const { password, full_name, email, _id, role } = user;
 
     return {
-	full_name, email, _id, role
+      full_name, email, _id, role
     };
+  }
+
+  async updateProfile(userId: string, updateData: Partial<IUser>): Promise<IUser> {
+    try {
+      // Check if user exists
+      const existingUser = await this.userRepository.findById(userId);
+      if (!existingUser) {
+        throw new AppError('User not found', 404);
+      }
+
+      // Don't allow updating sensitive fields
+      const { password, email, role, ...allowedUpdates } = updateData;
+
+      // Update user
+      const updatedUser = await this.userRepository.update(userId, allowedUpdates);
+      if (!updatedUser) {
+        throw new AppError('Failed to update user profile', 500);
+      }
+
+      return this.sanitizeUser(updatedUser);
+    } catch (error) {
+      throw error;
+    }
   }
 } 
