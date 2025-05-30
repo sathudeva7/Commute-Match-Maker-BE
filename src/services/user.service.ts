@@ -1,5 +1,5 @@
 import { UserRepository } from '../repositories/user.repository';
-import { IUser, IUserRegistration, IUserLogin, IAuthResponse } from '../types/user.types';
+import { IUser, IUserRegistration, IUserLogin, IAuthResponse, IMatchingPreferences } from '../types/user.types';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../utils/appError';
@@ -92,17 +92,82 @@ export class UserService {
       }
 
       // Don't allow updating sensitive fields
-      const { password, email, role, ...allowedUpdates } = updateData;
+      const { password, email, role, matching_preferences, ...allowedUpdates } = updateData;
 
-      // Update user
+      // Update user basic info
       const updatedUser = await this.userRepository.update(userId, allowedUpdates);
       if (!updatedUser) {
         throw new AppError('Failed to update user profile', 500);
       }
 
+      // Update matching preferences if provided
+      if (matching_preferences) {
+        this.validateMatchingPreferences(matching_preferences);
+        await this.userRepository.updateMatchingPreferences(userId, matching_preferences);
+      }
+
       return this.sanitizeUser(updatedUser);
     } catch (error) {
       throw error;
+    }
+  }
+
+  private validateMatchingPreferences(preferences: IMatchingPreferences): void {
+    // Validate commute time format
+    if (preferences.preferred_commute_time) {
+      const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      if (!timeRegex.test(preferences.preferred_commute_time.start) || 
+          !timeRegex.test(preferences.preferred_commute_time.end)) {
+        throw new AppError('Invalid commute time format. Use HH:mm format', 400);
+      }
+    }
+
+    // Validate commute days
+    if (preferences.preferred_commute_days) {
+      const validDays = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+      const invalidDays = preferences.preferred_commute_days.filter(day => !validDays.includes(day));
+      if (invalidDays.length > 0) {
+        throw new AppError(`Invalid commute days: ${invalidDays.join(', ')}`, 400);
+      }
+    }
+
+    // Validate age range
+    if (preferences.preferred_age_range) {
+      if (preferences.preferred_age_range.min < 18 || 
+          preferences.preferred_age_range.max > 100 || 
+          preferences.preferred_age_range.min > preferences.preferred_age_range.max) {
+        throw new AppError('Invalid age range. Min age must be >= 18 and max age must be <= 100', 400);
+      }
+    }
+
+    // Validate max distance
+    if (preferences.max_distance !== undefined && 
+        (preferences.max_distance < 1 || preferences.max_distance > 100)) {
+      throw new AppError('Max distance must be between 1 and 100 kilometers', 400);
+    }
+
+    // Validate vehicle type
+    if (preferences.preferred_vehicle_type && 
+        !['CAR', 'MOTORCYCLE', 'BICYCLE', 'PUBLIC_TRANSPORT'].includes(preferences.preferred_vehicle_type)) {
+      throw new AppError('Invalid vehicle type', 400);
+    }
+
+    // Validate gender preference
+    if (preferences.preferred_gender && 
+        !['MALE', 'FEMALE', 'ANY'].includes(preferences.preferred_gender)) {
+      throw new AppError('Invalid gender preference', 400);
+    }
+
+    // Validate smoking preference
+    if (preferences.smoking_preference && 
+        !['SMOKER', 'NON_SMOKER', 'ANY'].includes(preferences.smoking_preference)) {
+      throw new AppError('Invalid smoking preference', 400);
+    }
+
+    // Validate music preference
+    if (preferences.music_preference && 
+        !['YES', 'NO', 'ANY'].includes(preferences.music_preference)) {
+      throw new AppError('Invalid music preference', 400);
     }
   }
 } 

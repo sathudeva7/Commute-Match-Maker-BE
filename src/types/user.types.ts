@@ -6,6 +6,39 @@ export enum UserRole {
   ADMIN = 'admin'
 }
 
+export interface IMatchingPreferences {
+  preferred_commute_time?: {
+    start: string;  // Format: "HH:mm"
+    end: string;    // Format: "HH:mm"
+  };
+  profession: string;
+  languages: string[];
+  interests: string[];
+  preferred_commute_days?: string[];  // ["MONDAY", "TUESDAY", etc.]
+  preferred_route?: {
+    start_location: {
+      latitude: number;
+      longitude: number;
+      address: string;
+    };
+    end_location: {
+      latitude: number;
+      longitude: number;
+      address: string;
+    };
+  };
+  preferred_commute_times?: string[];
+  preferred_vehicle_type?: 'CAR' | 'MOTORCYCLE' | 'BICYCLE' | 'PUBLIC_TRANSPORT';
+  preferred_gender?: 'MALE' | 'FEMALE' | 'ANY';
+  preferred_age_range?: {
+    min: number;
+    max: number;
+  };
+  smoking_preference?: 'SMOKER' | 'NON_SMOKER' | 'ANY';
+  music_preference?: 'YES' | 'NO' | 'ANY';
+  max_distance?: number;  // in kilometers
+}
+
 export interface IUser {
   _id?: string;
   full_name: string;
@@ -17,6 +50,7 @@ export interface IUser {
   createdAt?: Date;
   updatedAt?: Date;
   role: UserRole;
+  matching_preferences?: IMatchingPreferences;
 }
 
 export interface IUserRegistration {
