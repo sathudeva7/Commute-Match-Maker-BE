@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { IMatchingPreferences } from '../types/user.types';
 
 const UserMatchingPreferencesSchema = new mongoose.Schema({
   user: {
@@ -7,6 +8,7 @@ const UserMatchingPreferencesSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  matching_preferences: {
   profession: {
     type: String,
     required: true
@@ -42,12 +44,18 @@ const UserMatchingPreferencesSchema = new mongoose.Schema({
 	type: String,
 	default: "text-embedding-ada-002"
    },
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
+}, {
+  timestamps: true
 });
 
-// Index for faster queries
-UserMatchingPreferencesSchema.index({ profession: 1, languages: 1, interests: 1 });
+// Create individual indexes for fields we'll query frequently
+UserMatchingPreferencesSchema.index({ 'matching_preferences.interests': 1 });
+UserMatchingPreferencesSchema.index({ 'matching_preferences.languages': 1 });
+UserMatchingPreferencesSchema.index({ 'matching_preferences.profession': 1 });
+
 
 const UserMatchingPreferences = mongoose.model('UserMatchingPreferences', UserMatchingPreferencesSchema);
 

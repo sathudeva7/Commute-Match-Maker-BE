@@ -1,5 +1,6 @@
-import { IUser, IUserRegistration, UserRole } from '../types/user.types';
+import { IMatchingPreferences, IUser, IUserRegistration, UserRole } from '../types/user.types';
 import User from '../models/User';
+import UserMatchingPreferences from '../models/UserMatchingPreferences';
 
 export class UserRepository {
   async create(userData: IUserRegistration): Promise<IUser> {
@@ -17,6 +18,10 @@ export class UserRepository {
 
   async update(id: string, data: Partial<IUser>): Promise<IUser | null> {
     return await User.findByIdAndUpdate(id, data, { new: true });
+  }
+
+  async updateMatchingPreferences(id: string, data: Partial<any>): Promise<IUser | null> {
+    return await UserMatchingPreferences.findByIdAndUpdate(id, { matching_preferences: data }, { new: true });
   }
 
   async delete(id: string): Promise<boolean> {
