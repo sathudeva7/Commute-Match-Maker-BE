@@ -45,6 +45,7 @@ export class UserController {
   login = async (req: Request, res: Response): Promise<void> => {
     try {
       const loginData: IUserLogin = req.body;
+      console.log('loginData',loginData);
       const result = await this.userService.login(loginData);
       
       const response: ApiResponse = {

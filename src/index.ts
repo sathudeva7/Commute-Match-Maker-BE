@@ -6,6 +6,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import './config/db'; // Initializes DB connection and logs connection status
 import userRoutes from './routes/user.routes';
 import adminRoutes from './routes/admin.routes';
+import cors from 'cors';
 import userMatchingPreferencesRoutes from './routes/userMatchingPreferences.routes';
 import { ApiResponse } from './types/response.types';
 
@@ -13,6 +14,7 @@ const app: Express = express();
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 
 // Middleware
+app.use(cors());
 app.use(express.json()); // To parse JSON request bodies
 
 // Routes
@@ -20,7 +22,7 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Welcome to the Node.js PostgreSQL TypeScript Starter API!');
 });
 
-app.use('/api/users', userRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/preferences', userMatchingPreferencesRoutes);
 
@@ -48,10 +50,10 @@ process.on('uncaughtException', (error: Error) => {
   console.error('Uncaught Exception:', error);
   // Application specific logging, and forcing shutdown (graceful if possible)
   process.exit(1);
-});
+}); 
 
 
 // Start the server
-app.listen(PORT, () => {
+app.listen(3000, '0.0.0.0', () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

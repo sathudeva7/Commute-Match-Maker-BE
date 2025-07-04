@@ -26,6 +26,8 @@ export const validateRegistration = (req: Request, res: Response, next: NextFunc
 
 export const validateLogin = (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
+  console.log('email',email);
+  console.log('password',password);
   const missingFields: string[] = [];
 
   if (!email) missingFields.push('email');
