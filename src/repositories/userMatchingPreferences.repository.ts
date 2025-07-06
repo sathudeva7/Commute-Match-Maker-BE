@@ -58,7 +58,7 @@ export class UserMatchingPreferencesRepository {
   async findByUserId(userId: string) {
     try {
       const preferences = await UserMatchingPreferences.findOne({ user: userId })
-        .populate('user', 'full_name email');
+        .populate('user', 'full_name');
       return preferences;
     } catch (error) {
       throw new AppError('Failed to fetch matching preferences', 500);

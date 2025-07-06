@@ -18,6 +18,10 @@ const UserMatchingPreferencesSchema = new mongoose.Schema({
     default: [],
     required: true
   },
+  about_me: {
+    type: String,
+    default: ''
+  },
   interests: {
     type: [String],
     default: [],

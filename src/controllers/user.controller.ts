@@ -75,6 +75,41 @@ export class UserController {
     }
   };
 
+  getProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const userId = req.user?._id;
+      if (!userId) {
+        throw new AppError('User not authenticated', 401);
+      }
+
+      const result = await this.userService.getProfile(userId);
+      
+      const response: ApiResponse = {
+        success: true,
+        result,
+        message: 'Profile retrieved successfully'
+      };
+      
+      res.status(200).json(response);
+    } catch (error) {
+      if (error instanceof AppError) {
+        const response: ApiResponse = {
+          success: false,
+          result: null,
+          message: error.message
+        };
+        res.status(error.statusCode).json(response);
+      } else {
+        const response: ApiResponse = {
+          success: false,
+          result: null,
+          message: 'Internal server error'
+        };
+        res.status(500).json(response);
+      }
+    }
+  };
+
   updateProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const userId = req.user?._id;

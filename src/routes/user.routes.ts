@@ -8,6 +8,7 @@ const userController = new UserController();
 
 router.post('/register', validateRegistration, userController.register);
 router.post('/login', validateLogin, userController.login);
+router.get('/profile', authenticate, userController.getProfile);
 router.put('/update-profile', authenticate, userController.updateProfile);
 
 export default router; 

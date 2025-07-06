@@ -77,11 +77,21 @@ export class UserService {
   }
 
   private sanitizeUser(user: IUser): IUser {
-    const { password, full_name, email, _id, role } = user;
+    const { password, ...sanitizedUser } = user;
+    return sanitizedUser;
+  }
 
-    return {
-      full_name, email, _id, role
-    };
+  async getProfile(userId: string): Promise<IUser> {
+    try {
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new AppError('User not found', 404);
+      }
+
+      return this.sanitizeUser(user);
+    } catch (error) {
+      throw error;
+    }
   }
 
   async updateProfile(userId: string, updateData: Partial<IUser>): Promise<IUser> {
