@@ -22,13 +22,14 @@ export class UserService {
       // Hash password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(userData.password, salt);
-
+     console.log('haas', hashedPassword);
       // Create user
       const user = await this.userRepository.create({
         ...userData,
         password: hashedPassword
       });
-
+      
+   console.log('usss', user);
       // Generate token
       const token = this.generateToken(user);
 

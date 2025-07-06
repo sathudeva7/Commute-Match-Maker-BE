@@ -14,6 +14,7 @@ export class UserController {
   register = async (req: Request, res: Response): Promise<void> => {
     try {
       const userData: IUserRegistration = req.body;
+      console.log('userData', userData);
       const result = await this.userService.register(userData);
       
       const response: ApiResponse = {
