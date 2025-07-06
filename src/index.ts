@@ -6,6 +6,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import './config/db'; // Initializes DB connection and logs connection status
 import userRoutes from './routes/user.routes';
 import adminRoutes from './routes/admin.routes';
+import journeyRoutes from './routes/journey.routes';
 import cors from 'cors';
 import userMatchingPreferencesRoutes from './routes/userMatchingPreferences.routes';
 import { ApiResponse } from './types/response.types';
@@ -24,6 +25,7 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/journey', journeyRoutes);
 app.use('/api/preferences', userMatchingPreferencesRoutes);
 
 // Error handling middleware
