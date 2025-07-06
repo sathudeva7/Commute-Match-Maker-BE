@@ -6,7 +6,7 @@ const router = Router();
 const controller = new UserMatchingPreferencesController();
 
 // All routes require authentication
-//router.use(authenticate);
+router.use(authenticate);
 
 // Create matching preferences
 router.post('/', controller.createPreferences);

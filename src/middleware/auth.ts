@@ -6,7 +6,9 @@ import { AuthenticatedRequest, UserRole } from '../types/user.types';
 
 export const authenticate = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
+    console.log('rssqq--', req.headers);
     const token = req.headers.authorization?.split(' ')[1];
+    console.log('token', token);
     
     if (!token) {
       throw new AppError('Authentication required', 401);
