@@ -3,15 +3,19 @@ import dotenv from 'dotenv';
 dotenv.config(); // Load environment variables first
 
 import express, { Express, Request, Response, NextFunction } from 'express';
+import { createServer } from 'http';
 import './config/db'; // Initializes DB connection and logs connection status
 import userRoutes from './routes/user.routes';
 import adminRoutes from './routes/admin.routes';
 import journeyRoutes from './routes/journey.routes';
+import chatRoutes from './routes/chat.routes';
 import cors from 'cors';
 import userMatchingPreferencesRoutes from './routes/userMatchingPreferences.routes';
 import { ApiResponse } from './types/response.types';
+import { SocketService } from './services/socket.service';
 
 const app: Express = express();
+const server = createServer(app);
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 
 // Middleware
@@ -27,6 +31,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/journey', journeyRoutes);
 app.use('/api/preferences', userMatchingPreferencesRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
@@ -55,7 +60,11 @@ process.on('uncaughtException', (error: Error) => {
 }); 
 
 
+// Initialize Socket.IO
+const socketService = new SocketService(server);
+
 // Start the server
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`WebSocket server is ready for real-time chat`);
 });

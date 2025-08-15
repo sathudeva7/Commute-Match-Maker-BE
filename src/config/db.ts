@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import User from '../models/User';
 import UserMatchingPreferences from '../models/UserMatchingPreferences';
+import Chat from '../models/Chat';
+import Message from '../models/Message';
 
 dotenv.config(); // To load .env variables
 
@@ -32,5 +34,7 @@ export default {
   mongoose,
   Example,
   User,
-  UserMatchingPreferences
+  UserMatchingPreferences,
+  Chat,
+  Message
 };

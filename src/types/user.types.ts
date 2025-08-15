@@ -44,6 +44,9 @@ export interface IUser {
   full_name: string;
   email: string;
   password?: string;
+  date_of_birth?: string;
+  phone_number?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
   oauth_provider?: string;
   oauth_id?: string;
   profile_image_url?: string;
@@ -57,6 +60,9 @@ export interface IUserRegistration {
   full_name: string;
   email: string;
   password: string;
+  date_of_birth?: string;
+  phone_number?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
   role?: UserRole; // Optional, defaults to USER
 }
 

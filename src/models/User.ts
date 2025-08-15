@@ -19,6 +19,19 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
+  date_of_birth: {
+    type: String,
+    trim: true
+  },
+  phone_number: {
+    type: String,
+    trim: true
+  },
+  gender: {
+    type: String,
+    enum: ['MALE', 'FEMALE', 'OTHER'],
+    trim: true
+  },
   role: {
     type: String,
     enum: Object.values(UserRole),

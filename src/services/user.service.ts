@@ -29,7 +29,6 @@ export class UserService {
         password: hashedPassword
       });
       
-   console.log('usss', user);
       // Generate token
       const token = this.generateToken(user);
 
@@ -105,15 +104,19 @@ export class UserService {
       // Don't allow updating sensitive fields
       const { password, email, role, matching_preferences, ...allowedUpdates } = updateData;
 
+      // Validate matching preferences first if provided
+      if (matching_preferences) {
+        this.validateMatchingPreferences(matching_preferences);
+      }
+
       // Update user basic info
       const updatedUser = await this.userRepository.update(userId, allowedUpdates);
       if (!updatedUser) {
         throw new AppError('Failed to update user profile', 500);
       }
 
-      // Update matching preferences if provided
+      // Update matching preferences if provided (after validation)
       if (matching_preferences) {
-        this.validateMatchingPreferences(matching_preferences);
         await this.userRepository.updateMatchingPreferences(userId, matching_preferences);
       }
 

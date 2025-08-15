@@ -13,6 +13,10 @@ export interface IJourney {
   route_id: string;
   start_point: string;
   end_point: string;
+  departure_time: string;
+  arrival_time?: string;
+  days_of_week?: string[];
+  description?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -22,6 +26,10 @@ export interface IJourneyCreate {
   route_id: string;
   start_point: string;
   end_point: string;
+  departure_time: string;
+  arrival_time?: string;
+  days_of_week?: string[];
+  description?: string;
 }
 
 export interface IJourneyUpdate {
@@ -29,6 +37,10 @@ export interface IJourneyUpdate {
   route_id?: string;
   start_point?: string;
   end_point?: string;
+  departure_time?: string;
+  arrival_time?: string;
+  days_of_week?: string[];
+  description?: string;
 }
 
 export interface IJourneyQuery {

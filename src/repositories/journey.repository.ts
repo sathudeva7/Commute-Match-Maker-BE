@@ -93,4 +93,9 @@ export class JourneyRepository {
 
     return await Journey.countDocuments(filter);
   }
+
+  // Add missing methods for tests
+  async deleteMany(filter: any): Promise<void> {
+    await Journey.deleteMany(filter);
+  }
 } 

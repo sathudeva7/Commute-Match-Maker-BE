@@ -46,4 +46,25 @@ export class UserRepository {
 
     return user;
   }
+
+  // Add missing methods for tests
+  async deleteMany(filter: any): Promise<void> {
+    await User.deleteMany(filter);
+  }
+
+  async findAll(page: number = 1, limit: number = 10, filter: any = {}): Promise<IUser[]> {
+    const skip = (page - 1) * limit;
+    return await User.find(filter, { password: 0 })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+  }
+
+  async count(filter: any = {}): Promise<number> {
+    return await User.countDocuments(filter);
+  }
+
+  async findWithPreferences(userId: string): Promise<IUser | null> {
+    return await User.findById(userId, { password: 0 });
+  }
 } 

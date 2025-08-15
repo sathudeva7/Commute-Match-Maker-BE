@@ -22,12 +22,24 @@ export class JourneyService {
 
   async getJourneyById(id: string): Promise<IJourney> {
     try {
+      // Check if the ID is a valid ObjectId format
+      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        throw new AppError('Invalid journey ID format', 400);
+      }
+      
       const journey = await this.journeyRepository.findById(id);
       if (!journey) {
         throw new AppError('Journey not found', 404);
       }
       return journey;
-    } catch (error) {
+    } catch (error: any) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      // Handle Mongoose CastError for invalid ObjectId
+      if (error.name === 'CastError') {
+        throw new AppError('Invalid journey ID format', 400);
+      }
       throw error;
     }
   }

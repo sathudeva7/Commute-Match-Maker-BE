@@ -23,6 +23,22 @@ const JourneySchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  departure_time: {
+    type: String, // Format: "HH:mm"
+    required: true
+  },
+  arrival_time: {
+    type: String, // Format: "HH:mm"
+    required: false
+  },
+  days_of_week: [{
+    type: String,
+    enum: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
+  }],
+  description: {
+    type: String,
+    trim: true
+  },
   createdAt: { type: Date, default: Date.now }
 }, {
   timestamps: true
