@@ -183,18 +183,10 @@ describe('UserService', () => {
           end: '09:00'
         },
         preferred_commute_days: ['MONDAY', 'TUESDAY'],
-        preferred_age_range: {
-          min: 25,
-          max: 35
-        },
-        max_distance: 5,
-        preferred_vehicle_type: 'CAR' as const,
-        preferred_gender: 'ANY' as const,
-        smoking_preference: 'NON_SMOKER' as const,
-        music_preference: 'YES' as const,
         profession: 'Software Engineer',
         languages: ['English', 'Spanish'],
-        interests: ['Technology', 'Music']
+        interests: ['Technology', 'Music'],
+        about_me: 'Software engineer who loves technology and music'
       }
     };
 
@@ -252,7 +244,8 @@ describe('UserService', () => {
           },
           profession: 'Software Engineer',
           languages: ['English'],
-          interests: ['Technology']
+          interests: ['Technology'],
+          about_me: 'Software engineer who loves technology'
         }
       };
 
@@ -274,7 +267,8 @@ describe('UserService', () => {
           },
           profession: 'Software Engineer',
           languages: ['English'],
-          interests: ['Technology']
+          interests: ['Technology'],
+          about_me: 'Software engineer who loves technology'
         }
       };
 

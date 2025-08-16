@@ -5,24 +5,26 @@ import UserMatchingPreferences from '../models/UserMatchingPreferences';
 export class UserRepository {
   async create(userData: IUserRegistration): Promise<IUser> {
     const user = new User(userData);
-    return await user.save();
+    const savedUser = await user.save();
+    return savedUser.toObject();
   }
 
   async findByEmail(email: string): Promise<IUser | null> {
-    return await User.findOne({ email });
+    const user = await User.findOne({ email });
+    return user ? user.toObject() : null;
   }
 
   async findById(id: string): Promise<IUser | null> {
-    return await User.findById(id);
+    const user = await User.findById(id);
+    return user ? user.toObject() : null;
   }
 
   async update(id: string, data: Partial<IUser>): Promise<IUser | null> {
-    return await User.findByIdAndUpdate(id, data, { new: true });
+    const user = await User.findByIdAndUpdate(id, data, { new: true });
+    return user ? user.toObject() : null;
   }
 
-  async updateMatchingPreferences(id: string, data: Partial<any>): Promise<IUser | null> {
-    return await UserMatchingPreferences.findByIdAndUpdate(id, { matching_preferences: data }, { new: true });
-  }
+
 
   async delete(id: string): Promise<boolean> {
     const result = await User.findByIdAndDelete(id);
@@ -30,7 +32,8 @@ export class UserRepository {
   }
 
   async getAllUsers(): Promise<IUser[]> {
-    return await User.find({}, { password: 0 }); // Exclude password from results
+    const users = await User.find({}, { password: 0 }); // Exclude password from results
+    return users.map(user => user.toObject());
   }
 
   async updateRole(userId: string, newRole: UserRole): Promise<IUser> {
@@ -44,7 +47,7 @@ export class UserRepository {
       throw new Error('User not found');
     }
 
-    return user;
+    return user.toObject();
   }
 
   // Add missing methods for tests
@@ -54,10 +57,11 @@ export class UserRepository {
 
   async findAll(page: number = 1, limit: number = 10, filter: any = {}): Promise<IUser[]> {
     const skip = (page - 1) * limit;
-    return await User.find(filter, { password: 0 })
+    const users = await User.find(filter, { password: 0 })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
+    return users.map(user => user.toObject());
   }
 
   async count(filter: any = {}): Promise<number> {
@@ -65,6 +69,7 @@ export class UserRepository {
   }
 
   async findWithPreferences(userId: string): Promise<IUser | null> {
-    return await User.findById(userId, { password: 0 });
+    const user = await User.findById(userId, { password: 0 });
+    return user ? user.toObject() : null;
   }
 } 

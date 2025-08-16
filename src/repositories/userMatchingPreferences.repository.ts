@@ -19,6 +19,7 @@ export class UserMatchingPreferencesRepository {
           profession: preferences.profession,
           languages: preferences.languages,
           interests: preferences.interests,
+          preferred_commute_time: preferences.preferred_commute_time,
           preferred_commute_times: preferences.preferred_commute_times,
           preferred_commute_days: preferences.preferred_commute_days,
         }
@@ -40,15 +41,11 @@ export class UserMatchingPreferencesRepository {
     try {
       const updatedPreferences = await UserMatchingPreferences.findOneAndUpdate(
         { user: userId },
-        { $set: { matching_preferences: preferences } },
-        { new: true }
+        { matching_preferences: preferences },
+        { new: true, upsert: true }
       ).populate('user', 'full_name email');
 
-      if (!updatedPreferences) {
-        throw new AppError('Matching preferences not found', 404);
-      }
-
-      return updatedPreferences;
+      return updatedPreferences.toObject();
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError('Failed to update matching preferences', 500);
@@ -59,7 +56,7 @@ export class UserMatchingPreferencesRepository {
     try {
       const preferences = await UserMatchingPreferences.findOne({ user: userId })
         .populate('user', 'full_name');
-      return preferences;
+      return preferences ? preferences.toObject() : null;
     } catch (error) {
       throw new AppError('Failed to fetch matching preferences', 500);
     }

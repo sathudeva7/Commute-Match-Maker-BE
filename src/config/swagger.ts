@@ -189,75 +189,8 @@ const options = {
                   },
                   description: 'Preferred commute time periods (e.g., morning, evening)'
                 },
-                preferred_commute_radius: {
-                  type: 'number',
-                  description: 'Preferred commute radius in kilometers'
-                },
-                preferred_route: {
-                  type: 'object',
-                  properties: {
-                    start_location: {
-                      type: 'object',
-                      properties: {
-                        latitude: { type: 'number' },
-                        longitude: { type: 'number' },
-                        address: { type: 'string' }
-                      }
-                    },
-                    end_location: {
-                      type: 'object',
-                      properties: {
-                        latitude: { type: 'number' },
-                        longitude: { type: 'number' },
-                        address: { type: 'string' }
-                      }
-                    }
-                  },
-                  description: 'Preferred route information'
-                },
-                preferred_vehicle_type: {
-                  type: 'string',
-                  enum: ['CAR', 'MOTORCYCLE', 'BICYCLE', 'PUBLIC_TRANSPORT'],
-                  description: 'Preferred vehicle type'
-                },
-                preferred_gender: {
-                  type: 'string',
-                  enum: ['MALE', 'FEMALE', 'ANY'],
-                  description: 'Preferred gender for matching'
-                },
-                preferred_age_range: {
-                  type: 'object',
-                  properties: {
-                    min: { type: 'number', minimum: 18 },
-                    max: { type: 'number', maximum: 100 }
-                  },
-                  description: 'Preferred age range for matching'
-                },
-                smoking_preference: {
-                  type: 'string',
-                  enum: ['SMOKER', 'NON_SMOKER', 'ANY'],
-                  description: 'Smoking preference for matching'
-                },
-                music_preference: {
-                  type: 'string',
-                  enum: ['YES', 'NO', 'ANY'],
-                  description: 'Music preference for matching'
-                },
-                max_distance: {
-                  type: 'number',
-                  description: 'Maximum distance for matching in kilometers'
-                },
-                embedding: {
-                  type: 'array',
-                  items: {
-                    type: 'number'
-                  },
-                  description: 'AI embedding vector for matching'
-                },
-                embedding_version: {
-                  type: 'string',
-                  description: 'Version of the embedding model used'
-                }
+
+
               }
             },
             createdAt: {

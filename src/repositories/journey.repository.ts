@@ -7,15 +7,18 @@ export class JourneyRepository {
       ...journeyData,
       user: userId
     });
-    return await journey.save() as IJourney;
+    const savedJourney = await journey.save();
+    return savedJourney.toObject() as IJourney;
   }
 
   async findById(id: string): Promise<IJourney | null> {
-    return await Journey.findById(id).populate('user', 'full_name email') as IJourney | null;
+    const journey = await Journey.findById(id).populate('user', 'full_name email');
+    return journey ? journey.toObject() as IJourney : null;
   }
 
   async findByUser(userId: string): Promise<IJourney[]> {
-    return await Journey.find({ user: userId }).populate('user', 'full_name email') as IJourney[];
+    const journeys = await Journey.find({ user: userId }).populate('user', 'full_name email');
+    return journeys.map(journey => journey.toObject() as IJourney);
   }
 
   async findAll(query: IJourneyQuery = {}): Promise<IJourney[]> {
@@ -41,15 +44,17 @@ export class JourneyRepository {
       filter.user = query.user;
     }
 
-    return await Journey.find(filter).populate('user', 'full_name email').sort({ createdAt: -1 }) as IJourney[];
+    const journeys = await Journey.find(filter).populate('user', 'full_name email').sort({ createdAt: -1 });
+    return journeys.map(journey => journey.toObject() as IJourney);
   }
 
   async update(id: string, userId: string, updateData: IJourneyUpdate): Promise<IJourney | null> {
-    return await Journey.findOneAndUpdate(
+    const journey = await Journey.findOneAndUpdate(
       { _id: id, user: userId },
       updateData,
       { new: true }
-    ).populate('user', 'full_name email') as IJourney | null;
+    ).populate('user', 'full_name email');
+    return journey ? journey.toObject() as IJourney : null;
   }
 
   async delete(id: string, userId: string): Promise<boolean> {
@@ -63,21 +68,23 @@ export class JourneyRepository {
   }
 
   async findByRoute(travel_mode: string, route_id: string): Promise<IJourney[]> {
-    return await Journey.find({ 
+    const journeys = await Journey.find({ 
       travel_mode, 
       route_id 
-    }).populate('user', 'full_name email') as IJourney[];
+    }).populate('user', 'full_name email');
+    return journeys.map(journey => journey.toObject() as IJourney);
   }
 
   async findSimilarJourneys(userId: string, journey: IJourneyCreate): Promise<IJourney[]> {
-    return await Journey.find({
+    const journeys = await Journey.find({
       user: { $ne: userId }, // Exclude current user
       travel_mode: journey.travel_mode,
       $or: [
         { start_point: { $regex: journey.start_point, $options: 'i' } },
         { end_point: { $regex: journey.end_point, $options: 'i' } }
       ]
-    }).populate('user', 'full_name email') as IJourney[];
+    }).populate('user', 'full_name email');
+    return journeys.map(journey => journey.toObject() as IJourney);
   }
 
   async count(query: IJourneyQuery = {}): Promise<number> {

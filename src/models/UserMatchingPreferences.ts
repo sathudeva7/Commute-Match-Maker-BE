@@ -40,18 +40,8 @@ const UserMatchingPreferencesSchema = new mongoose.Schema({
       type: [String], // e.g., ['morning', 'evening']
       default: []
     },
-    preferred_commute_radius: {
-      type: Number, // in kilometers
-      default: 10
-    },
-    embedding: {
-      type: [Number],   // Array of floats (1536-dimensional vector)
-      default: []
-    },
-    embedding_version: {
-      type: String,
-      default: "text-embedding-ada-002"
-    },
+
+
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

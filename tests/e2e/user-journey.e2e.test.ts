@@ -123,16 +123,7 @@ describe('End-to-End User Journey Tests', () => {
             start: '08:00',
             end: '09:00'
           },
-          preferred_commute_days: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'],
-          preferred_age_range: {
-            min: 25,
-            max: 40
-          },
-          max_distance: 5,
-          preferred_vehicle_type: 'PUBLIC_TRANSPORT',
-          preferred_gender: 'ANY',
-          smoking_preference: 'NON_SMOKER',
-          music_preference: 'YES'
+          preferred_commute_days: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
         }
       };
 
@@ -143,16 +134,7 @@ describe('End-to-End User Journey Tests', () => {
             start: '08:15',
             end: '09:15'
           },
-          preferred_commute_days: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'],
-          preferred_age_range: {
-            min: 28,
-            max: 45
-          },
-          max_distance: 10,
-          preferred_vehicle_type: 'PUBLIC_TRANSPORT',
-          preferred_gender: 'ANY',
-          smoking_preference: 'NON_SMOKER',
-          music_preference: 'NO'
+          preferred_commute_days: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
         }
       };
 

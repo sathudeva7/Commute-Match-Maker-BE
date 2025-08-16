@@ -128,43 +128,6 @@ export class UserMatchingPreferencesService {
       }
     }
 
-    // Validate age range
-    if (preferences.preferred_age_range) {
-      if (preferences.preferred_age_range.min < 18 || 
-          preferences.preferred_age_range.max > 100 || 
-          preferences.preferred_age_range.min > preferences.preferred_age_range.max) {
-        throw new AppError('Invalid age range. Min age must be >= 18 and max age must be <= 100', 400);
-      }
-    }
 
-    // Validate max distance
-    if (preferences.max_distance !== undefined && 
-        (preferences.max_distance < 1 || preferences.max_distance > 100)) {
-      throw new AppError('Max distance must be between 1 and 100 kilometers', 400);
-    }
-
-    // Validate vehicle type
-    if (preferences.preferred_vehicle_type && 
-        !['CAR', 'MOTORCYCLE', 'BICYCLE', 'PUBLIC_TRANSPORT'].includes(preferences.preferred_vehicle_type)) {
-      throw new AppError('Invalid vehicle type', 400);
-    }
-
-    // Validate gender preference
-    if (preferences.preferred_gender && 
-        !['MALE', 'FEMALE', 'ANY'].includes(preferences.preferred_gender)) {
-      throw new AppError('Invalid gender preference', 400);
-    }
-
-    // Validate smoking preference
-    if (preferences.smoking_preference && 
-        !['SMOKER', 'NON_SMOKER', 'ANY'].includes(preferences.smoking_preference)) {
-      throw new AppError('Invalid smoking preference', 400);
-    }
-
-    // Validate music preference
-    if (preferences.music_preference && 
-        !['YES', 'NO', 'ANY'].includes(preferences.music_preference)) {
-      throw new AppError('Invalid music preference', 400);
-    }
   }
 } 

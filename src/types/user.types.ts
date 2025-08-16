@@ -17,27 +17,6 @@ export interface IMatchingPreferences {
   };
   preferred_commute_days?: string[];  // ["MONDAY", "TUESDAY", etc.]
   preferred_commute_times?: string[];
-  preferred_route?: {
-    start_location: {
-      latitude: number;
-      longitude: number;
-      address: string;
-    };
-    end_location: {
-      latitude: number;
-      longitude: number;
-      address: string;
-    };
-  };
-  preferred_vehicle_type?: 'CAR' | 'MOTORCYCLE' | 'BICYCLE' | 'PUBLIC_TRANSPORT';
-  preferred_gender?: 'MALE' | 'FEMALE' | 'ANY';
-  preferred_age_range?: {
-    min: number;
-    max: number;
-  };
-  smoking_preference?: 'SMOKER' | 'NON_SMOKER' | 'ANY';
-  music_preference?: 'YES' | 'NO' | 'ANY';
-  max_distance?: number;  // in kilometers
 }
 
 export interface IUser {

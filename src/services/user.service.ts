@@ -76,6 +76,7 @@ export class UserService {
   }
 
   private sanitizeUser(user: IUser): IUser {
+    // Remove password and return sanitized user
     const { password, ...sanitizedUser } = user;
     return sanitizedUser;
   }
@@ -87,7 +88,36 @@ export class UserService {
         throw new AppError('User not found', 404);
       }
 
-      return this.sanitizeUser(user);
+      // Get user's matching preferences
+      const userMatchingPreferencesRepo = new (await import('../repositories/userMatchingPreferences.repository')).UserMatchingPreferencesRepository();
+      const matchingPreferencesDoc = await userMatchingPreferencesRepo.findByUserId(userId);
+
+      // Map the matching preferences to the expected format
+      let matchingPreferences: IMatchingPreferences | undefined;
+      if (matchingPreferencesDoc && matchingPreferencesDoc.matching_preferences) {
+        matchingPreferences = {
+          profession: matchingPreferencesDoc.matching_preferences.profession || '',
+          languages: matchingPreferencesDoc.matching_preferences.languages || [],
+          about_me: matchingPreferencesDoc.matching_preferences.about_me || '',
+          interests: matchingPreferencesDoc.matching_preferences.interests || [],
+          preferred_commute_time: matchingPreferencesDoc.matching_preferences.preferred_commute_time?.start && matchingPreferencesDoc.matching_preferences.preferred_commute_time?.end 
+            ? { 
+                start: matchingPreferencesDoc.matching_preferences.preferred_commute_time.start, 
+                end: matchingPreferencesDoc.matching_preferences.preferred_commute_time.end 
+              } 
+            : undefined,
+          preferred_commute_days: matchingPreferencesDoc.matching_preferences.preferred_commute_days || [],
+          preferred_commute_times: matchingPreferencesDoc.matching_preferences.preferred_commute_times || []
+        };
+      }
+
+      // Combine user data with matching preferences
+      const userWithPreferences = {
+        ...this.sanitizeUser(user),
+        matching_preferences: matchingPreferences
+      };
+
+      return userWithPreferences;
     } catch (error) {
       throw error;
     }
@@ -147,6 +177,7 @@ export class UserService {
       // If explicit matching_preferences are provided, use those
       if (matching_preferences) {
         matchingPreferencesToUpdate = matching_preferences;
+        console.log('Using explicit matching_preferences:', matchingPreferencesToUpdate);
       } else {
         // If individual fields are provided, build matching preferences object
         const individualFields: Partial<IMatchingPreferences> = {};
@@ -160,13 +191,17 @@ export class UserService {
 
         if (Object.keys(individualFields).length > 0) {
           matchingPreferencesToUpdate = individualFields;
+          console.log('Built individual matching preferences:', matchingPreferencesToUpdate);
         }
       }
 
       // Update matching preferences if there are any to update
       if (matchingPreferencesToUpdate) {
+        console.log('Updating matching preferences for user:', userId, 'with data:', matchingPreferencesToUpdate);
         this.validateMatchingPreferences(matchingPreferencesToUpdate as IMatchingPreferences);
-        await this.userRepository.updateMatchingPreferences(userId, matchingPreferencesToUpdate);
+        const userMatchingPreferencesRepo = new (await import('../repositories/userMatchingPreferences.repository')).UserMatchingPreferencesRepository();
+        const result = await userMatchingPreferencesRepo.update(userId, matchingPreferencesToUpdate);
+        console.log('Matching preferences update result:', result);
       }
 
       return this.sanitizeUser(updatedUser);
@@ -175,31 +210,7 @@ export class UserService {
     }
   }
 
-  async updateUserDetails(userId: string, updateData: Partial<IUser>): Promise<IUser> {
-    try {
-      // Check if user exists
-      const existingUser = await this.userRepository.findById(userId);
-      if (!existingUser) {
-        throw new AppError('User not found', 404);
-      }
 
-      // Don't allow updating sensitive fields
-      const { password, email, role, oauth_provider, oauth_id, createdAt, updatedAt, _id, ...allowedUpdates } = updateData;
-
-      // Validate the update data
-      this.validateUserUpdateData(allowedUpdates);
-
-      // Update user details
-      const updatedUser = await this.userRepository.update(userId, allowedUpdates);
-      if (!updatedUser) {
-        throw new AppError('Failed to update user details', 500);
-      }
-
-      return this.sanitizeUser(updatedUser);
-    } catch (error) {
-      throw error;
-    }
-  }
 
   private validateUserUpdateData(updateData: Partial<IUser>): void {
     // Validate gender
@@ -334,43 +345,10 @@ export class UserService {
       }
     }
 
-    // Validate age range
-    if (preferences.preferred_age_range) {
-      if (preferences.preferred_age_range.min < 18 || 
-          preferences.preferred_age_range.max > 100 || 
-          preferences.preferred_age_range.min > preferences.preferred_age_range.max) {
-        throw new AppError('Invalid age range. Min age must be >= 18 and max age must be <= 100', 400);
-      }
-    }
 
-    // Validate max distance
-    if (preferences.max_distance !== undefined && 
-        (preferences.max_distance < 1 || preferences.max_distance > 100)) {
-      throw new AppError('Max distance must be between 1 and 100 kilometers', 400);
-    }
 
-    // Validate vehicle type
-    if (preferences.preferred_vehicle_type && 
-        !['CAR', 'MOTORCYCLE', 'BICYCLE', 'PUBLIC_TRANSPORT'].includes(preferences.preferred_vehicle_type)) {
-      throw new AppError('Invalid vehicle type', 400);
-    }
 
-    // Validate gender preference
-    if (preferences.preferred_gender && 
-        !['MALE', 'FEMALE', 'ANY'].includes(preferences.preferred_gender)) {
-      throw new AppError('Invalid gender preference', 400);
-    }
 
-    // Validate smoking preference
-    if (preferences.smoking_preference && 
-        !['SMOKER', 'NON_SMOKER', 'ANY'].includes(preferences.smoking_preference)) {
-      throw new AppError('Invalid smoking preference', 400);
-    }
-
-    // Validate music preference
-    if (preferences.music_preference && 
-        !['YES', 'NO', 'ANY'].includes(preferences.music_preference)) {
-      throw new AppError('Invalid music preference', 400);
-    }
+    
   }
 } 

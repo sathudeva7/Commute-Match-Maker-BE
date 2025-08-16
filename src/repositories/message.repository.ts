@@ -4,14 +4,16 @@ import { IMessage, MessageStatus } from '../types/chat.types';
 export class MessageRepository {
   async create(messageData: Partial<IMessage>): Promise<IMessage> {
     const message = new Message(messageData);
-    return await message.save();
+    const savedMessage = await message.save();
+    return savedMessage.toObject() as IMessage;
   }
 
   async findById(messageId: string): Promise<IMessage | null> {
-    return await Message.findById(messageId)
+    const message = await Message.findById(messageId)
       .populate('sender')
       .populate('receiver')
       .populate('replyToMessage');
+    return message ? message.toObject() as IMessage : null;
   }
 
   async findChatMessages(
@@ -21,13 +23,14 @@ export class MessageRepository {
   ): Promise<IMessage[]> {
     const skip = (page - 1) * limit;
     
-    return await Message.find({ chatId })
+    const messages = await Message.find({ chatId })
       .populate('sender')
       .populate('receiver')
       .populate('replyToMessage')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+    return messages.map(message => message.toObject() as IMessage);
   }
 
   async findMessagesBefore(
@@ -35,7 +38,7 @@ export class MessageRepository {
     beforeDate: Date, 
     limit: number = 50
   ): Promise<IMessage[]> {
-    return await Message.find({ 
+    const messages = await Message.find({ 
       chatId,
       createdAt: { $lt: beforeDate }
     })
@@ -44,6 +47,7 @@ export class MessageRepository {
     .populate('replyToMessage')
     .sort({ createdAt: -1 })
     .limit(limit);
+    return messages.map(message => message.toObject() as IMessage);
   }
 
   async findMessagesAfter(
@@ -51,7 +55,7 @@ export class MessageRepository {
     afterDate: Date, 
     limit: number = 50
   ): Promise<IMessage[]> {
-    return await Message.find({ 
+    const messages = await Message.find({ 
       chatId,
       createdAt: { $gt: afterDate }
     })
@@ -60,24 +64,26 @@ export class MessageRepository {
     .populate('replyToMessage')
     .sort({ createdAt: 1 })
     .limit(limit);
+    return messages.map(message => message.toObject() as IMessage);
   }
 
   async updateMessageStatus(
     messageId: string, 
     status: MessageStatus
   ): Promise<IMessage | null> {
-    return await Message.findByIdAndUpdate(
+    const message = await Message.findByIdAndUpdate(
       messageId,
       { status, updatedAt: new Date() },
       { new: true }
     );
+    return message ? message.toObject() as IMessage : null;
   }
 
   async markAsRead(
     messageId: string, 
     userId: string
   ): Promise<IMessage | null> {
-    return await Message.findByIdAndUpdate(
+    const message = await Message.findByIdAndUpdate(
       messageId,
       {
         status: MessageStatus.READ,
@@ -91,6 +97,7 @@ export class MessageRepository {
       },
       { new: true }
     );
+    return message ? message.toObject() as IMessage : null;
   }
 
   async markChatMessagesAsRead(
@@ -146,7 +153,7 @@ export class MessageRepository {
     searchTerm: string,
     limit: number = 20
   ): Promise<IMessage[]> {
-    return await Message.find({
+    const messages = await Message.find({
       chatId,
       content: { $regex: searchTerm, $options: 'i' }
     })
@@ -154,6 +161,7 @@ export class MessageRepository {
     .populate('receiver')
     .sort({ createdAt: -1 })
     .limit(limit);
+    return messages.map(message => message.toObject() as IMessage);
   }
 
   async findUserMessages(
@@ -163,7 +171,7 @@ export class MessageRepository {
   ): Promise<IMessage[]> {
     const skip = (page - 1) * limit;
     
-    return await Message.find({
+    const messages = await Message.find({
       $or: [
         { senderId: userId },
         { receiverId: userId }
@@ -175,6 +183,7 @@ export class MessageRepository {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
+    return messages.map(message => message.toObject() as IMessage);
   }
 
   async deleteMessage(messageId: string): Promise<boolean> {
@@ -186,17 +195,19 @@ export class MessageRepository {
     messageId: string,
     updateData: Partial<IMessage>
   ): Promise<IMessage | null> {
-    return await Message.findByIdAndUpdate(
+    const message = await Message.findByIdAndUpdate(
       messageId,
       { ...updateData, updatedAt: new Date() },
       { new: true }
     ).populate('sender').populate('receiver');
+    return message ? message.toObject() as IMessage : null;
   }
 
   async getLastMessage(chatId: string): Promise<IMessage | null> {
-    return await Message.findOne({ chatId })
+    const message = await Message.findOne({ chatId })
       .populate('sender')
       .sort({ createdAt: -1 });
+    return message ? message.toObject() as IMessage : null;
   }
 
   async countChatMessages(chatId: string): Promise<number> {
@@ -204,10 +215,11 @@ export class MessageRepository {
   }
 
   async findMessagesByIds(messageIds: string[]): Promise<IMessage[]> {
-    return await Message.find({ _id: { $in: messageIds } })
+    const messages = await Message.find({ _id: { $in: messageIds } })
       .populate('sender')
       .populate('receiver')
       .populate('replyToMessage');
+    return messages.map(message => message.toObject() as IMessage);
   }
 
   // Add missing methods for tests
@@ -216,7 +228,7 @@ export class MessageRepository {
   }
 
   async findMessagesByUser(userId: string): Promise<IMessage[]> {
-    return await Message.find({
+    const messages = await Message.find({
       $or: [
         { senderId: userId },
         { receiverId: userId }
@@ -226,10 +238,11 @@ export class MessageRepository {
     .populate('receiver')
     .populate('replyToMessage')
     .sort({ createdAt: -1 });
+    return messages.map(message => message.toObject() as IMessage);
   }
 
   async findMessagesByType(chatId: string, messageType: string): Promise<IMessage[]> {
-    return await Message.find({
+    const messages = await Message.find({
       chatId,
       messageType
     })
@@ -237,6 +250,7 @@ export class MessageRepository {
     .populate('receiver')
     .populate('replyToMessage')
     .sort({ createdAt: -1 });
+    return messages.map(message => message.toObject() as IMessage);
   }
 
   async getMessageStats(chatId: string): Promise<{
