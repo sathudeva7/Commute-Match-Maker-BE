@@ -116,6 +116,7 @@ export class UserService {
         ...this.sanitizeUser(user),
         matching_preferences: matchingPreferences
       };
+      console.log('userWithPreferences', userWithPreferences);
 
       return userWithPreferences;
     } catch (error) {
