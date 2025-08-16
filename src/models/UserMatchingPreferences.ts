@@ -9,45 +9,49 @@ const UserMatchingPreferencesSchema = new mongoose.Schema({
     unique: true
   },
   matching_preferences: {
-  profession: {
-    type: String,
-    required: true
-  },
-  languages: {
-    type: [String],
-    default: [],
-    required: true
-  },
-  about_me: {
-    type: String,
-    default: ''
-  },
-  interests: {
-    type: [String],
-    default: [],
-    required: true
-  },
-  // Additional fields that might be useful for matching
-  preferred_commute_times: {
-    type: [String], // e.g., ['morning', 'evening']
-    default: []
-  },
-  preferred_commute_days: {
-    type: [String], // e.g., ['monday', 'wednesday', 'friday']
-    default: []
-  },
-  preferred_commute_radius: {
-    type: Number, // in kilometers
-    default: 10
-  },
-  embedding: {
-	type: [Number],   // Array of floats (1536-dimensional vector)
-	default: []
-   },
-   embedding_version: {
-	type: String,
-	default: "text-embedding-ada-002"
-   },
+    profession: {
+      type: String,
+      required: true
+    },
+    languages: {
+      type: [String],
+      default: [],
+      required: true
+    },
+    about_me: {
+      type: String,
+      default: ''
+    },
+    interests: {
+      type: [String],
+      default: [],
+      required: true
+    },
+    preferred_commute_time: {
+      start: { type: String }, // Format: "HH:mm"
+      end: { type: String }    // Format: "HH:mm"
+    },
+    preferred_commute_days: {
+      type: [String], // e.g., ['MONDAY', 'WEDNESDAY', 'FRIDAY']
+      default: []
+    },
+    // Additional fields that might be useful for matching
+    preferred_commute_times: {
+      type: [String], // e.g., ['morning', 'evening']
+      default: []
+    },
+    preferred_commute_radius: {
+      type: Number, // in kilometers
+      default: 10
+    },
+    embedding: {
+      type: [Number],   // Array of floats (1536-dimensional vector)
+      default: []
+    },
+    embedding_version: {
+      type: String,
+      default: "text-embedding-ada-002"
+    },
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
@@ -59,7 +63,7 @@ const UserMatchingPreferencesSchema = new mongoose.Schema({
 UserMatchingPreferencesSchema.index({ 'matching_preferences.interests': 1 });
 UserMatchingPreferencesSchema.index({ 'matching_preferences.languages': 1 });
 UserMatchingPreferencesSchema.index({ 'matching_preferences.profession': 1 });
-
+UserMatchingPreferencesSchema.index({ 'matching_preferences.preferred_commute_days': 1 });
 
 const UserMatchingPreferences = mongoose.model('UserMatchingPreferences', UserMatchingPreferencesSchema);
 

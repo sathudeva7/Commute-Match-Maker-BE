@@ -7,14 +7,16 @@ export enum UserRole {
 }
 
 export interface IMatchingPreferences {
+  profession: string;
+  languages: string[];
+  about_me: string;
+  interests: string[];
   preferred_commute_time?: {
     start: string;  // Format: "HH:mm"
     end: string;    // Format: "HH:mm"
   };
-  profession: string;
-  languages: string[];
-  interests: string[];
   preferred_commute_days?: string[];  // ["MONDAY", "TUESDAY", etc.]
+  preferred_commute_times?: string[];
   preferred_route?: {
     start_location: {
       latitude: number;
@@ -27,7 +29,6 @@ export interface IMatchingPreferences {
       address: string;
     };
   };
-  preferred_commute_times?: string[];
   preferred_vehicle_type?: 'CAR' | 'MOTORCYCLE' | 'BICYCLE' | 'PUBLIC_TRANSPORT';
   preferred_gender?: 'MALE' | 'FEMALE' | 'ANY';
   preferred_age_range?: {
@@ -50,6 +51,7 @@ export interface IUser {
   oauth_provider?: string;
   oauth_id?: string;
   profile_image_url?: string;
+  bio?: string;
   createdAt?: Date;
   updatedAt?: Date;
   role: UserRole;

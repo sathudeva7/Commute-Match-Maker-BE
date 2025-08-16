@@ -54,6 +54,62 @@ export class UserMatchingPreferencesService {
   }
 
   private validateMatchingPreferences(preferences: IMatchingPreferences): void {
+    // Validate profession
+    if (preferences.profession) {
+      if (typeof preferences.profession !== 'string' || preferences.profession.trim().length < 2) {
+        throw new AppError('Profession must be at least 2 characters long', 400);
+      }
+      if (preferences.profession.length > 100) {
+        throw new AppError('Profession must be less than 100 characters', 400);
+      }
+    }
+
+    // Validate about_me
+    if (preferences.about_me !== undefined) {
+      if (typeof preferences.about_me !== 'string') {
+        throw new AppError('About me must be a string', 400);
+      }
+      if (preferences.about_me.length > 1000) {
+        throw new AppError('About me must be less than 1000 characters', 400);
+      }
+    }
+
+    // Validate interests
+    if (preferences.interests) {
+      if (!Array.isArray(preferences.interests)) {
+        throw new AppError('Interests must be an array', 400);
+      }
+      if (preferences.interests.length > 20) {
+        throw new AppError('Cannot have more than 20 interests', 400);
+      }
+      for (const interest of preferences.interests) {
+        if (typeof interest !== 'string' || interest.trim().length < 2) {
+          throw new AppError('Each interest must be at least 2 characters long', 400);
+        }
+        if (interest.length > 50) {
+          throw new AppError('Each interest must be less than 50 characters', 400);
+        }
+      }
+    }
+
+    // Validate languages
+    if (preferences.languages) {
+      if (!Array.isArray(preferences.languages)) {
+        throw new AppError('Languages must be an array', 400);
+      }
+      if (preferences.languages.length > 10) {
+        throw new AppError('Cannot have more than 10 languages', 400);
+      }
+      for (const language of preferences.languages) {
+        if (typeof language !== 'string' || language.trim().length < 2) {
+          throw new AppError('Each language must be at least 2 characters long', 400);
+        }
+        if (language.length > 30) {
+          throw new AppError('Each language must be less than 30 characters', 400);
+        }
+      }
+    }
+
     // Validate commute time format
     if (preferences.preferred_commute_time) {
       const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;

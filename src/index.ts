@@ -13,6 +13,7 @@ import cors from 'cors';
 import userMatchingPreferencesRoutes from './routes/userMatchingPreferences.routes';
 import { ApiResponse } from './types/response.types';
 import { SocketService } from './services/socket.service';
+import { setupSwagger } from './config/swagger';
 
 const app: Express = express();
 const server = createServer(app);
@@ -21,6 +22,9 @@ const PORT: number = parseInt(process.env.PORT || '3000', 10);
 // Middleware
 app.use(cors());
 app.use(express.json()); // To parse JSON request bodies
+
+// Setup Swagger documentation
+setupSwagger(app);
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
