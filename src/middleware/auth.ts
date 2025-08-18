@@ -24,7 +24,7 @@ export const authenticate = async (req: AuthenticatedRequest, res: Response, nex
     next();
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
-      next(new AppError('Invalid token', 401));
+      next(new AppError('Invalid token ss', 401));
     } else {
       next(error);
     }

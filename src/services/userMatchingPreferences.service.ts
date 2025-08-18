@@ -1,18 +1,28 @@
 import { IMatchingPreferences } from '../types/user.types';
 import { UserMatchingPreferencesRepository } from '../repositories/userMatchingPreferences.repository';
 import { AppError } from '../utils/appError';
+import { EmbeddingService } from './embedding.service';
 
 export class UserMatchingPreferencesService {
   private repository: UserMatchingPreferencesRepository;
+  private embeddingService: EmbeddingService;
 
   constructor() {
     this.repository = new UserMatchingPreferencesRepository();
+    this.embeddingService = new EmbeddingService();
   }
 
   async createPreferences(userId: string, preferences: IMatchingPreferences) {
     try {
       this.validateMatchingPreferences(preferences);
-      return await this.repository.create(userId, preferences);
+      const result = await this.repository.create(userId, preferences);
+      
+      // Generate and update embedding asynchronously
+      this.generateAndUpdateEmbedding(userId, preferences).catch(error => {
+        console.error(`Failed to generate embedding for user ${userId}:`, error);
+      });
+
+      return result;
     } catch (error) {
       throw error;
     }
@@ -23,7 +33,18 @@ export class UserMatchingPreferencesService {
       if (preferences) {
         this.validateMatchingPreferences(preferences as IMatchingPreferences);
       }
-      return await this.repository.update(userId, preferences);
+      const result = await this.repository.update(userId, preferences);
+
+      // Get full preferences and regenerate embedding asynchronously
+      this.getPreferences(userId).then(fullPreferences => {
+        this.generateAndUpdateEmbedding(userId, fullPreferences.matching_preferences as IMatchingPreferences).catch(error => {
+          console.error(`Failed to regenerate embedding for user ${userId}:`, error);
+        });
+      }).catch(error => {
+        console.error(`Failed to get preferences for embedding update for user ${userId}:`, error);
+      });
+
+      return result;
     } catch (error) {
       throw error;
     }
@@ -129,5 +150,92 @@ export class UserMatchingPreferencesService {
     }
 
 
+  }
+
+  async generateAndUpdateEmbedding(userId: string, preferences: IMatchingPreferences) {
+    try {
+      const { embeddingText, embedding } = await this.embeddingService.generatePreferencesEmbedding(preferences);
+      
+      let commuteSegments: number[][] = [];
+      if (preferences.preferred_commute_time?.start && preferences.preferred_commute_time?.end) {
+        commuteSegments = this.embeddingService.calculateCommuteSegments(
+          preferences.preferred_commute_time.start,
+          preferences.preferred_commute_time.end
+        );
+      }
+
+      await this.repository.updateEmbedding(userId, embeddingText, embedding, commuteSegments);
+      console.log(`Successfully updated embedding for user ${userId}`);
+    } catch (error) {
+      console.error(`Failed to generate embedding for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  async regenerateEmbedding(userId: string) {
+    try {
+      const preferences = await this.getPreferences(userId);
+      if (!preferences) {
+        throw new AppError('User preferences not found', 404);
+      }
+
+      await this.generateAndUpdateEmbedding(userId, preferences.matching_preferences as IMatchingPreferences);
+      return { success: true, message: 'Embedding regenerated successfully' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async bulkGenerateEmbeddings(limit: number = 50) {
+    try {
+      const usersWithoutEmbeddings = await this.repository.findUsersWithoutEmbeddings(limit);
+      const updates = [];
+
+      for (const userPrefs of usersWithoutEmbeddings) {
+        try {
+          const { embeddingText, embedding } = await this.embeddingService.generatePreferencesEmbedding(
+            userPrefs.matching_preferences as IMatchingPreferences
+          );
+
+          let commuteSegments: number[][] = [];
+          if (userPrefs.matching_preferences?.preferred_commute_time?.start && 
+              userPrefs.matching_preferences.preferred_commute_time?.end) {
+            commuteSegments = this.embeddingService.calculateCommuteSegments(
+              userPrefs.matching_preferences.preferred_commute_time.start,
+              userPrefs.matching_preferences.preferred_commute_time.end
+            );
+          }
+
+          updates.push({
+            userId: userPrefs.user.toString(),
+            embeddingText,
+            embedding,
+            commuteSegments
+          });
+        } catch (error) {
+          console.error(`Failed to generate embedding for user ${userPrefs.user}:`, error);
+        }
+      }
+
+      if (updates.length > 0) {
+        await this.repository.bulkUpdateEmbeddings(updates);
+      }
+
+      return {
+        processed: usersWithoutEmbeddings.length,
+        successful: updates.length,
+        failed: usersWithoutEmbeddings.length - updates.length
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getEmbeddingStats() {
+    try {
+      return await this.repository.getEmbeddingStats();
+    } catch (error) {
+      throw error;
+    }
   }
 } 

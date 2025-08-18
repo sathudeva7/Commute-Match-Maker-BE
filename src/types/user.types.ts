@@ -19,6 +19,42 @@ export interface IMatchingPreferences {
   preferred_commute_times?: string[];
 }
 
+export interface IUserMatchingPreferences {
+  _id?: string;
+  user: string;
+  matching_preferences: IMatchingPreferences;
+  embedding_text?: string;
+  embedding?: number[];
+  commute_segments?: number[][];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ISemanticMatchResult {
+  user: IUserMatchingPreferences;
+  hybridScore: number;
+  semSim: number;
+  timeRatio: number;
+  dayJac: number;
+  langJac: number;
+  intsJac: number;
+  profMatch: number;
+}
+
+export interface ISemanticMatchQuery {
+  userId: string;
+  limit?: number;
+  minScore?: number;
+  weights?: {
+    time: number;
+    days: number;
+    lang: number;
+    ints: number;
+    sem: number;
+    prof: number;
+  };
+}
+
 export interface IUser {
   _id?: string;
   full_name: string;
