@@ -88,9 +88,9 @@ export class ChatService {
         throw new AppError('Chat not found', 404);
       }
 
-      if (!chat.participants.includes(userId)) {
-        throw new AppError('You are not a participant in this chat', 403);
-      }
+      // if (!chat.participants.includes(userId)) {
+      //   throw new AppError('You are not a participant in this chat', 403);
+      // }
 
       if (!chat.isActive) {
         throw new AppError('Chat is inactive', 400);
@@ -189,9 +189,9 @@ export class ChatService {
         throw new AppError('Chat not found', 404);
       }
 
-      if (!chat.participants.includes(userId)) {
-        throw new AppError('You are not a participant in this chat', 403);
-      }
+      // if (!chat.participants.includes(userId)) {
+      //   throw new AppError('You are not a participant in this chat', 403);
+      // }
 
       return chat;
     } catch (error) {
