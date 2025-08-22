@@ -76,9 +76,9 @@ export class SemanticMatchingService {
     minScore: number
   ): any[] {
     const userEmbedding = userPreferences.embedding!;
-    const userLanguages = userPreferences.matching_preferences.languages || [];
-    const userInterests = userPreferences.matching_preferences.interests || [];
-    const userProfession = userPreferences.matching_preferences.profession?.toLowerCase() || '';
+    const userLanguages = (userPreferences.matching_preferences.languages || []).map(l => l.toLowerCase());
+    const userInterests = (userPreferences.matching_preferences.interests || []).map(i => i.toLowerCase());
+    const userProfession = userPreferences.matching_preferences.profession?.toLowerCase().trim() || '';
 
     return [
       // Stage 1: Vector search (MUST BE FIRST STAGE)
@@ -100,68 +100,54 @@ export class SemanticMatchingService {
         }
       },
 
-      // Stage 3: Filter by commute days overlap
-      {
+      // Stage 3: Filter by commute days overlap (only if user specified days)
+      ...(days.length > 0 ? [{
         $match: {
           'matching_preferences.preferred_commute_days': { $in: days }
         }
-      },
-
-      // Stage 4: Filter by time overlap (if user has commute time)
-      ...(segments.length > 0 ? [{
-        $match: {
-          $expr: {
-            $gt: [
-              {
-                $let: {
-                  vars: { ts: "$commute_segments" },
-                  in: {
-                    $sum: {
-                      $map: {
-                        input: "$ts",
-                        as: "s",
-                        in: {
-                          $sum: segments.map(([qs, qe]) => ({
-                            $max: [0, {
-                              $subtract: [
-                                { $min: [{ $arrayElemAt: ["$s", 1] }, qe] },
-                                { $max: [{ $arrayElemAt: ["$s", 0] }, qs] }
-                              ]
-                            }]
-                          }))
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              0
-            ]
-          }
-        }
       }] : []),
+
+      // Stage 4: (Removed strict time-overlap filtering to avoid excluding candidates without segments)
 
       // Stage 5: Calculate similarity scores
       {
         $addFields: {
           semSim: { $ifNull: ["$score", 0] },
           daysInter: {
-            $setIntersection: ["$matching_preferences.preferred_commute_days", days]
+            $setIntersection: [
+              { $map: { input: "$matching_preferences.preferred_commute_days", as: "d", in: { $toUpper: "$$d" } } },
+              days
+            ]
           },
           daysUnion: {
-            $setUnion: ["$matching_preferences.preferred_commute_days", days]
+            $setUnion: [
+              { $map: { input: "$matching_preferences.preferred_commute_days", as: "d", in: { $toUpper: "$$d" } } },
+              days
+            ]
           },
           langInter: {
-            $setIntersection: ["$matching_preferences.languages", userLanguages]
+            $setIntersection: [
+              { $map: { input: "$matching_preferences.languages", as: "l", in: { $toLower: "$$l" } } },
+              userLanguages
+            ]
           },
           langUnion: {
-            $setUnion: ["$matching_preferences.languages", userLanguages]
+            $setUnion: [
+              { $map: { input: "$matching_preferences.languages", as: "l", in: { $toLower: "$$l" } } },
+              userLanguages
+            ]
           },
           intsInter: {
-            $setIntersection: ["$matching_preferences.interests", userInterests]
+            $setIntersection: [
+              { $map: { input: "$matching_preferences.interests", as: "i", in: { $toLower: "$$i" } } },
+              userInterests
+            ]
           },
           intsUnion: {
-            $setUnion: ["$matching_preferences.interests", userInterests]
+            $setUnion: [
+              { $map: { input: "$matching_preferences.interests", as: "i", in: { $toLower: "$$i" } } },
+              userInterests
+            ]
           },
           profMatch: {
             $cond: [
