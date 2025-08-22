@@ -63,7 +63,7 @@ describe('ChatController', () => {
     it('should create direct chat successfully', async () => {
       const chatData = {
         chatType: ChatType.DIRECT,
-        participantIds: ['user456'],
+        participantId: 'user456',
         title: undefined,
         description: undefined
       };
@@ -100,7 +100,7 @@ describe('ChatController', () => {
         chatType: ChatType.GROUP,
         participants: ['user123', 'user456', 'user789'],
         title: 'Test Group',
-        description: 'A test group chat',
+        adminIds: ['user123'],
         isActive: true
       };
 
@@ -113,12 +113,13 @@ describe('ChatController', () => {
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.result).toEqual(mockChat);
+      expect(response.body.message).toBe('Chat created successfully');
     });
 
     it('should return 400 when no participants provided', async () => {
       const chatData = {
         chatType: ChatType.DIRECT,
-        participantIds: [],
+        participantId: undefined,
         title: undefined,
         description: undefined
       };
@@ -129,7 +130,7 @@ describe('ChatController', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe('At least one participant ID is required');
+      expect(response.body.message).toBe('Participant ID is required for direct chats');
     });
 
     it('should return 400 when group chat has no title', async () => {
@@ -152,7 +153,9 @@ describe('ChatController', () => {
     it('should handle service errors', async () => {
       const chatData = {
         chatType: ChatType.DIRECT,
-        participantIds: ['user456']
+        participantId: 'user456',
+        title: undefined,
+        description: undefined
       };
 
       mockChatService.prototype.createChat.mockRejectedValue(

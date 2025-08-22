@@ -41,12 +41,34 @@ POST /api/chat/
 **Request Body:**
 ```json
 {
+  "participantId": "userId",  // For direct chats (only one participant needed)
   "chatType": "direct" | "group",
-  "participantIds": ["userId1", "userId2"],
   "title": "Chat Title (required for group chats)",
   "description": "Chat Description (optional)"
 }
 ```
+
+**Examples:**
+
+**Direct Chat:**
+```json
+{
+  "participantId": "user2_id",
+  "chatType": "direct"
+}
+```
+
+**Group Chat:**
+```json
+{
+  "participantIds": ["user2_id", "user3_id"],
+  "chatType": "group",
+  "title": "My Group Chat",
+  "description": "A group chat for our team"
+}
+```
+
+**Note:** For direct chats, you only need to provide the `participantId` of the other user. The current user's ID is automatically added from the authentication token. For group chats, you still need to provide an array of `participantIds`.
 
 **Response:**
 ```json

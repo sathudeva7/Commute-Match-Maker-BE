@@ -66,7 +66,8 @@ export interface IChatWithDetails extends IChat {
 
 export interface ICreateChatRequest {
   chatType: ChatType;
-  participantIds: string[];
+  participantId?: string; // Single participant ID for direct chats
+  participantIds?: string[]; // Multiple participant IDs for group chats (backward compatibility)
   title?: string;
   description?: string;
 }

@@ -17,6 +17,7 @@
     "test:journey-service": "jest tests/unit/services/journey.service.test.ts",
     "test:journey-controller": "jest tests/unit/controllers/journey.controller.test.ts",
     "test:socket-service": "jest tests/unit/services/socket.service.test.ts",
+    "test:semantic-matching-service": "jest tests/unit/services/semanticMatching.service.test.ts",
     "test:auth-middleware": "jest tests/unit/middleware/auth.test.ts",
     "test:user-repo": "jest tests/unit/repositories/user.repository.test.ts",
     "test:chat-repo": "jest tests/unit/repositories/chat.repository.test.ts",

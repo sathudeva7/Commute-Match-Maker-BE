@@ -53,6 +53,7 @@ export class SemanticMatchingService {
 
       return results.map((result: any) => ({
         user: result as IUserMatchingPreferences,
+        userFullName: result.userFullName || 'Unknown User',
         hybridScore: result.hybridScore,
         semSim: result.semSim,
         timeRatio: result.timeRatio,
@@ -293,7 +294,29 @@ export class SemanticMatchingService {
         $limit: limit
       },
 
-      // Stage 11: Clean up output
+      // Stage 11: Lookup user information to get full name
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "userInfo"
+        }
+      },
+
+      // Stage 12: Extract user full name
+      {
+        $addFields: {
+          userFullName: {
+            $ifNull: [
+              { $arrayElemAt: ["$userInfo.full_name", 0] },
+              "Unknown User"
+            ]
+          }
+        }
+      },
+
+      // Stage 13: Clean up output
       {
         $project: {
           embedding: 0,
@@ -304,7 +327,8 @@ export class SemanticMatchingService {
           langInter: 0,
           langUnion: 0,
           intsInter: 0,
-          intsUnion: 0
+          intsUnion: 0,
+          userInfo: 0
         }
       }
     ];

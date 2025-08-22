@@ -32,6 +32,7 @@ export interface IUserMatchingPreferences {
 
 export interface ISemanticMatchResult {
   user: IUserMatchingPreferences;
+  userFullName: string;
   hybridScore: number;
   semSim: number;
   timeRatio: number;

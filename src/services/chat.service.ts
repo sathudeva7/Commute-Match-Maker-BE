@@ -26,8 +26,18 @@ export class ChatService {
 
   async createChat(userId: string, chatData: ICreateChatRequest): Promise<IChat> {
     try {
-      // Validate participants exist
-      const participantIds = [...chatData.participantIds, userId];
+      // For direct chats, we only need one participant ID (the other is the current user)
+      // For group chats, we need multiple participant IDs
+      let participantIds: string[];
+      
+      if (chatData.chatType === ChatType.DIRECT) {
+        // For direct chats, combine the single participant with the current user
+        participantIds = [chatData.participantId!, userId];
+      } else {
+        // For group chats, use the provided participant IDs and add the current user
+        participantIds = [...(chatData.participantIds || []), userId];
+      }
+      
       const uniqueParticipantIds = [...new Set(participantIds)];
       
       if (uniqueParticipantIds.length < 2) {

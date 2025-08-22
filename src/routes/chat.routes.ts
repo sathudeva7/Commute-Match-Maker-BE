@@ -23,21 +23,36 @@ router.use(authenticate);
  *           schema:
  *             type: object
  *             required:
- *               - participants
+ *               - participantId
  *             properties:
- *               participants:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: Array of user IDs to include in the chat
- *                 example: ["user1_id", "user2_id"]
+ *               participantId:
+ *                 type: string
+ *                 description: ID of the other user for direct chats (current user ID is automatically added from auth token)
+ *                 example: "user2_id"
  *               chatType:
  *                 type: string
- *                 enum: [private, group]
- *                 default: private
- *               name:
+ *                 enum: [direct, group]
+ *                 default: direct
+ *                 description: Type of chat to create
+ *               title:
  *                 type: string
  *                 description: Chat name (required for group chats)
+ *               description:
+ *                 type: string
+ *                 description: Chat description (optional)
+ *           examples:
+ *             direct_chat:
+ *               summary: Create a direct chat
+ *               value:
+ *                 participantId: "user2_id"
+ *                 chatType: "direct"
+ *             group_chat:
+ *               summary: Create a group chat
+ *               value:
+ *                 participantIds: ["user2_id", "user3_id"]
+ *                 chatType: "group"
+ *                 title: "My Group Chat"
+ *                 description: "A group chat for our team"
  *     responses:
  *       201:
  *         description: Chat created successfully

@@ -4,7 +4,7 @@ import { MessageRepository } from '../../../src/repositories/message.repository'
 import { UserRepository } from '../../../src/repositories/user.repository';
 import { AppError } from '../../../src/utils/appError';
 import { ChatType, MessageType, MessageStatus } from '../../../src/types/chat.types';
-import { IUser } from '../../../src/types/user.types';
+import { IUser, UserRole } from '../../../src/types/user.types';
 
 // Mock dependencies
 jest.mock('../../../src/repositories/chat.repository');
@@ -36,15 +36,15 @@ describe('ChatService', () => {
   describe('createChat', () => {
     const chatData = {
       chatType: ChatType.DIRECT,
-      participantIds: ['user456'],
+      participantId: 'user456',
       title: undefined,
       description: undefined
     };
 
     it('should create direct chat successfully', async () => {
       const mockUsers = [
-        { _id: 'user123', full_name: 'John Doe' },
-        { _id: 'user456', full_name: 'Jane Doe' }
+        { _id: 'user123', full_name: 'John Doe', email: 'john@example.com', role: UserRole.USER },
+        { _id: 'user456', full_name: 'Jane Doe', email: 'jane@example.com', role: UserRole.USER }
       ];
       const mockChat = {
         _id: 'chat123',
@@ -77,13 +77,14 @@ describe('ChatService', () => {
 
     it('should return existing direct chat if already exists', async () => {
       const mockUsers = [
-        { _id: 'user123', full_name: 'John Doe' },
-        { _id: 'user456', full_name: 'Jane Doe' }
+        { _id: 'user123', full_name: 'John Doe', email: 'john@example.com', role: UserRole.USER },
+        { _id: 'user456', full_name: 'Jane Doe', email: 'jane@example.com', role: UserRole.USER }
       ];
       const existingChat = {
         _id: 'existing_chat',
         chatType: ChatType.DIRECT,
-        participants: ['user123', 'user456']
+        participants: ['user123', 'user456'],
+        isActive: true
       };
 
       mockUserRepo.findById
@@ -106,9 +107,9 @@ describe('ChatService', () => {
       };
 
       const mockUsers = [
-        { _id: 'user456', full_name: 'Jane Doe' },
-        { _id: 'user789', full_name: 'Bob Smith' },
-        { _id: 'user123', full_name: 'John Doe' }
+        { _id: 'user456', full_name: 'Jane Doe', email: 'jane@example.com', role: UserRole.USER },
+        { _id: 'user789', full_name: 'Bob Smith', email: 'bob@example.com', role: UserRole.USER },
+        { _id: 'user123', full_name: 'John Doe', email: 'john@example.com', role: UserRole.USER }
       ];
       const mockChat = {
         _id: 'chat123',
@@ -151,12 +152,12 @@ describe('ChatService', () => {
     it('should throw error when less than 2 unique participants', async () => {
       const invalidChatData = {
         chatType: ChatType.DIRECT,
-        participantIds: ['user123'], // Same as creator
+        participantId: 'user123', // Same as creator
         title: undefined,
         description: undefined
       };
 
-      const mockUser = { _id: 'user123', full_name: 'John Doe' };
+      const mockUser = { _id: 'user123', full_name: 'John Doe', email: 'john@example.com', role: UserRole.USER };
       mockUserRepo.findById.mockResolvedValue(mockUser);
 
       await expect(chatService.createChat('user123', invalidChatData))

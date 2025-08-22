@@ -26,28 +26,44 @@ export class ChatController {
 
       const chatData: ICreateChatRequest = {
         chatType: req.body.chatType || ChatType.DIRECT,
-        participantIds: req.body.participantIds || [],
+        participantId: req.body.participantId,
+        participantIds: req.body.participantIds,
         title: req.body.title,
         description: req.body.description
       };
 
-      // Validation
-      if (!chatData.participantIds || chatData.participantIds.length === 0) {
-        res.status(400).json({
-          success: false,
-          result: null,
-          message: 'At least one participant ID is required'
-        } as ApiResponse);
-        return;
-      }
-
-      if (chatData.chatType === ChatType.GROUP && !chatData.title) {
-        res.status(400).json({
-          success: false,
-          result: null,
-          message: 'Title is required for group chats'
-        } as ApiResponse);
-        return;
+      // Validation for direct chats
+      if (chatData.chatType === ChatType.DIRECT) {
+        if (!chatData.participantId) {
+          res.status(400).json({
+            success: false,
+            result: null,
+            message: 'Participant ID is required for direct chats'
+          } as ApiResponse);
+          return;
+        }
+        
+        // For direct chats, only need one participant ID
+        chatData.participantIds = [chatData.participantId];
+      } else if (chatData.chatType === ChatType.GROUP) {
+        // For group chats, need multiple participants
+        if (!chatData.participantIds || chatData.participantIds.length === 0) {
+          res.status(400).json({
+            success: false,
+            result: null,
+            message: 'At least one participant ID is required for group chats'
+          } as ApiResponse);
+          return;
+        }
+        
+        if (!chatData.title) {
+          res.status(400).json({
+            success: false,
+            result: null,
+            message: 'Title is required for group chats'
+          } as ApiResponse);
+          return;
+        }
       }
 
       const chat = await this.chatService.createChat(userId, chatData);
