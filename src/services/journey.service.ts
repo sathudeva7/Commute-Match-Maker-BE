@@ -94,6 +94,26 @@ export class JourneyService {
     }
   }
 
+  async getJourneysByRouteAndDeparture(
+    travel_mode: string,
+    route_id: string,
+    departure_time: string
+  ): Promise<IJourney[]> {
+    try {
+      this.validateTravelMode(travel_mode);
+      if (!departure_time || departure_time.trim().length === 0) {
+        throw new AppError('Departure time is required', 400);
+      }
+      return await this.journeyRepository.findByRouteAndDeparture(
+        travel_mode,
+        route_id,
+        departure_time
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async findSimilarJourneys(userId: string, journey: IJourneyCreate): Promise<IJourney[]> {
     try {
       this.validateJourneyData(journey);

@@ -75,6 +75,19 @@ export class JourneyRepository {
     return journeys.map(journey => journey.toObject() as IJourney);
   }
 
+  async findByRouteAndDeparture(
+    travel_mode: string,
+    route_id: string,
+    departure_time: string
+  ): Promise<IJourney[]> {
+    const journeys = await Journey.find({
+      travel_mode,
+      route_id,
+      departure_time
+    }).populate('user', 'full_name email');
+    return journeys.map(journey => journey.toObject() as IJourney);
+  }
+
   async findSimilarJourneys(userId: string, journey: IJourneyCreate): Promise<IJourney[]> {
     const journeys = await Journey.find({
       user: { $ne: userId }, // Exclude current user

@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import { ISemanticMatchQuery, ISemanticMatchResult, IUserMatchingPreferences } from '../types/user.types';
+import { IJourney } from '../types/journey.types';
+import { JourneyService } from './journey.service';
 import { UserMatchingPreferencesRepository } from '../repositories/userMatchingPreferences.repository';
 import { EmbeddingService } from './embedding.service';
 import { AppError } from '../utils/appError';
@@ -8,14 +10,19 @@ import UserMatchingPreferences from '../models/UserMatchingPreferences';
 export class SemanticMatchingService {
   private repository: UserMatchingPreferencesRepository;
   private embeddingService: EmbeddingService;
+  private journeyService: JourneyService;
 
   constructor() {
     this.repository = new UserMatchingPreferencesRepository();
     this.embeddingService = new EmbeddingService();
+    this.journeyService = new JourneyService();
   }
 
   async findSemanticMatches(query: ISemanticMatchQuery): Promise<ISemanticMatchResult[]> {
     try {
+      const journeyResults = await this.findSimilarJourneyUsersByUserId(query.userId);
+      const candidateUserIds = journeyResults.map(r => r.userId);
+      
       const userPreferences = await this.repository.findByUserId(query.userId);
       if (!userPreferences) {
         throw new AppError('User preferences not found', 404);
@@ -46,7 +53,8 @@ export class SemanticMatchingService {
         days,
         segments as unknown as number[][],
         limit,
-        minScore
+        minScore,
+        candidateUserIds
       );
 
       const results = await UserMatchingPreferences.aggregate(pipeline);
@@ -68,15 +76,81 @@ export class SemanticMatchingService {
     }
   }
 
+  async findUsersByJourney(
+    travel_mode: string,
+    route_id: string,
+    departure_time: string
+  ): Promise<{ userId: string; full_name?: string; email?: string }[]> {
+    const journeys = await this.journeyService.getJourneysByRouteAndDeparture(
+      travel_mode,
+      route_id,
+      departure_time
+    );
+
+    return journeys
+      .filter(j => !!j.user)
+      .map(j => {
+        const user: any = j.user;
+        return {
+          userId: typeof user === 'object' && user._id ? String(user._id) : String(user),
+          full_name: user && user.full_name ? user.full_name : undefined,
+          email: user && user.email ? user.email : undefined
+        };
+      });
+  }
+
+  async findSimilarJourneyUsersByUserId(
+    userId: string
+  ): Promise<Array<{ userId: string; full_name?: string; email?: string; journey: IJourney }>> {
+    const userJourneys = await this.journeyService.getUserJourneys(userId);
+    if (!userJourneys || userJourneys.length === 0) {
+      return [];
+    }
+
+    const candidateLists = await Promise.all(
+      userJourneys.map(j =>
+        this.journeyService.getJourneysByRouteAndDeparture(
+          j.travel_mode as unknown as string,
+          j.route_id,
+          j.departure_time
+        )
+      )
+    );
+
+    const seenUserIds = new Set<string>();
+    const results: Array<{ userId: string; full_name?: string; email?: string; journey: IJourney }> = [];
+
+    for (let i = 0; i < userJourneys.length; i++) {
+      const baseJourney = userJourneys[i];
+      const candidates = candidateLists[i] || [];
+      for (const cand of candidates) {
+        const candUser: any = cand.user;
+        const candUserId = typeof candUser === 'object' && candUser?._id ? String(candUser._id) : String(cand.user);
+        if (candUserId === userId) continue;
+        if (seenUserIds.has(candUserId)) continue;
+        seenUserIds.add(candUserId);
+        results.push({
+          userId: candUserId,
+          full_name: candUser && candUser.full_name ? candUser.full_name : undefined,
+          email: candUser && candUser.email ? candUser.email : undefined,
+          journey: cand as IJourney
+        });
+      }
+    }
+
+    return results;
+  }
+
   private buildAggregationPipeline(
     userPreferences: IUserMatchingPreferences,
     weights: any,
     days: string[],
     segments: number[][],
     limit: number,
-    minScore: number
+    minScore: number,
+    candidateUserIds?: string[]
   ): any[] {
-    const userEmbedding = userPreferences.embedding!;
+    const userEmbedding = userPreferences.embedding;
     const userLanguages = (userPreferences.matching_preferences.languages || []).map(l => l.toLowerCase());
     const userInterests = (userPreferences.matching_preferences.interests || []).map(i => i.toLowerCase());
     const userProfession = userPreferences.matching_preferences.profession?.toLowerCase().trim() || '';
@@ -88,8 +162,8 @@ export class SemanticMatchingService {
           index: "vector_index",
           path: "embedding",
           queryVector: userEmbedding,
-          numCandidates: 1000,
-          limit: 500
+          numCandidates: 100,
+          limit: 100
         }
       },
 
@@ -101,7 +175,14 @@ export class SemanticMatchingService {
         }
       },
 
-      // Stage 3: Filter by commute days overlap (only if user specified days)
+      // Stage 3a: Restrict to candidate users (from journeys) if provided
+      ...(candidateUserIds && candidateUserIds.length > 0 ? [{
+        $match: {
+          user: { $in: candidateUserIds.map(id => new mongoose.Types.ObjectId(id)) }
+        }
+      }] : []),
+
+      // Stage 3b: Filter by commute days overlap (only if user specified days)
       ...(days.length > 0 ? [{
         $match: {
           'matching_preferences.preferred_commute_days': { $in: days }
