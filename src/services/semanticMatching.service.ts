@@ -21,6 +21,7 @@ export class SemanticMatchingService {
   async findSemanticMatches(query: ISemanticMatchQuery): Promise<ISemanticMatchResult[]> {
     try {
       const journeyResults = await this.findSimilarJourneyUsersByUserId(query.userId);
+      console.log(journeyResults);
       const candidateUserIds = journeyResults.map(r => r.userId);
       
       const userPreferences = await this.repository.findByUserId(query.userId);

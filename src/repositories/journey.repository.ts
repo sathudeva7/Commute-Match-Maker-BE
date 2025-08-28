@@ -80,10 +80,12 @@ export class JourneyRepository {
     route_id: string,
     departure_time: string
   ): Promise<IJourney[]> {
+    // Match by date only (YYYY-MM-DD), ignoring time
+    const inputDateIso = new Date(departure_time).toISOString().slice(0, 10);
     const journeys = await Journey.find({
       travel_mode,
       route_id,
-      departure_time
+      departure_time: { $regex: `^${inputDateIso}` }
     }).populate('user', 'full_name email');
     return journeys.map(journey => journey.toObject() as IJourney);
   }
