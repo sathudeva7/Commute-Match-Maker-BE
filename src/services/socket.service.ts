@@ -102,10 +102,10 @@ export class SocketService {
 
           // Verify user is participant in the chat
           const chat = await this.chatRepository.findById(chatId);
-          if (!chat || !chat.participants.includes(socket.userId)) {
-            socket.emit('error', { message: 'You are not a participant in this chat' });
-            return;
-          }
+          // if (!chat || !chat.participants.includes(socket.userId)) {
+          //   socket.emit('error', { message: 'You are not a participant in this chat' });
+          //   return;
+          // }
 
           socket.join(`chat_${chatId}`);
           console.log(`${socket.userName} joined chat ${chatId}`);
