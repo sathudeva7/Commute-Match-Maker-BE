@@ -3,7 +3,8 @@ import { Request } from 'express';
 export enum TravelMode {
   BUS = 'bus',
   TUBE = 'tube',
-  OVERGROUND = 'overground'
+  OVERGROUND = 'overground',
+  FLIGHT = 'flight'
 }
 
 export interface IJourney {
