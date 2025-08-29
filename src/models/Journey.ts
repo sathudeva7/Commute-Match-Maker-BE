@@ -8,7 +8,7 @@ const JourneySchema = new mongoose.Schema({
   },
   travel_mode: {
     type: String,
-    enum: ['bus', 'tube', 'overground'],
+    enum: ['bus', 'tube', 'overground', 'flight'],
     required: true
   },
   route_id: {

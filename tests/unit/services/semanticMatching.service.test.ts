@@ -39,6 +39,7 @@ describe('SemanticMatchingService', () => {
 
       const mockQuery: ISemanticMatchQuery = {
         userId: 'user1',
+        departure_time: '09:00',
         limit: 10,
         minScore: 0.1
       };
@@ -106,6 +107,7 @@ describe('SemanticMatchingService', () => {
 
       const mockQuery: ISemanticMatchQuery = {
         userId: 'user1',
+        departure_time: '09:00',
         limit: 10,
         minScore: 0.1
       };
