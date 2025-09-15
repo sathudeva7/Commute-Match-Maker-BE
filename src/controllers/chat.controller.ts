@@ -78,6 +78,49 @@ export class ChatController {
     }
   };
 
+  // Admin: Get chats by arbitrary userId
+  getChatsByUserId = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const requesterId = req.user?._id;
+      if (!requesterId) {
+        res.status(401).json({
+          success: false,
+          result: null,
+          message: 'User not authenticated'
+        } as ApiResponse);
+        return;
+      }
+
+      const userId = req.params.userId;
+      if (!userId) {
+        res.status(400).json({
+          success: false,
+          result: null,
+          message: 'userId is required'
+        } as ApiResponse);
+        return;
+      }
+
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      const chats = await this.chatService.getUserChats(requesterId, page, limit);
+
+      res.status(200).json({
+        success: true,
+        result: {
+          chats,
+          page,
+          limit,
+          total: chats.length
+        },
+        message: 'Chats retrieved successfully'
+      } as ApiResponse);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   // Send a message
   sendMessage = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {

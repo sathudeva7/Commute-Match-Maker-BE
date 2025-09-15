@@ -107,6 +107,50 @@ router.get('/', chatController.getUserChats);
 
 /**
  * @swagger
+ * /api/chat/user/{userId}:
+ *   get:
+ *     summary: Admin - Get chats for a specific user
+ *     tags: [Chat]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID to get chats for
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *         description: Number of chats per page
+ *     responses:
+ *       200:
+ *         description: Chats retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Insufficient permissions
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/user/:userId', chatController.getChatsByUserId);
+
+/**
+ * @swagger
  * /api/chat/{chatId}:
  *   get:
  *     summary: Get specific chat by ID
