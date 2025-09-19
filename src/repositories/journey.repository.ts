@@ -82,6 +82,7 @@ export class JourneyRepository {
   ): Promise<IJourney[]> {
     // Match by date only (YYYY-MM-DD), ignoring time
     const inputDateIso = new Date(departure_time).toISOString().slice(0, 10);
+    console.log("daate",inputDateIso);
     const journeys = await Journey.find({
       travel_mode,
       route_id,

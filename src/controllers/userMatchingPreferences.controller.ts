@@ -166,7 +166,9 @@ export class UserMatchingPreferencesController {
 
       const query: ISemanticMatchQuery = {
         userId,
-        departure_time: req.query.departure_time as string,
+        departure_time: req.body.departure_time as string,
+        route_id: req.body.route_id,
+        travel_mode: req.body.travel_mode,
         limit: parseInt(req.query.limit as string) || 50,
         minScore: parseFloat(req.query.minScore as string) || 0.1,
         weights: req.body.weights || undefined

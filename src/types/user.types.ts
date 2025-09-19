@@ -45,6 +45,8 @@ export interface ISemanticMatchResult {
 export interface ISemanticMatchQuery {
   userId: string;
   departure_time?: string;
+  route_id?: string;
+  travel_mode?: string;
   limit?: number;
   minScore?: number;
   weights?: {

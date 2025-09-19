@@ -20,7 +20,7 @@ export class SemanticMatchingService {
 
   async findSemanticMatches(query: ISemanticMatchQuery): Promise<ISemanticMatchResult[]> {
     try {
-      const journeyResults = await this.findSimilarJourneyUsersByUserId(query.userId, query.departure_time);
+      const journeyResults = await this.findSimilarJourneyUsersByUserId(query.userId, query.departure_time, query.route_id, query.travel_mode);
       console.log(journeyResults);
       const candidateUserIds = journeyResults.map(r => r.userId);
       
@@ -102,7 +102,9 @@ export class SemanticMatchingService {
 
   async findSimilarJourneyUsersByUserId(
     userId: string,
-    departure_time?: string
+    departure_time?: string,
+    route_id?: string,
+    travel_mode?: string
   ): Promise<Array<{ userId: string; full_name?: string; email?: string; journey: IJourney }>> {
     const userJourneys = await this.journeyService.getUserJourneys(userId);
     if (!userJourneys || userJourneys.length === 0) {
@@ -112,8 +114,8 @@ export class SemanticMatchingService {
     const candidateLists = await Promise.all(
       userJourneys.map(j =>
         this.journeyService.getJourneysByRouteAndDeparture(
-          j.travel_mode as unknown as string,
-          j.route_id,
+          travel_mode as unknown as string,
+          route_id as string,
           departure_time || j.departure_time
         )
       )
