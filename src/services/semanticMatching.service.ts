@@ -23,7 +23,7 @@ export class SemanticMatchingService {
       const journeyResults = await this.findSimilarJourneyUsersByUserId(query.userId, query.departure_time, query.route_id, query.travel_mode);
       console.log(journeyResults);
       const candidateUserIds = journeyResults.map(r => r.userId);
-      
+      console.log("candidateUserIds",candidateUserIds);
       const userPreferences = await this.repository.findByUserId(query.userId);
       if (!userPreferences) {
         throw new AppError('User preferences not found', 404);
@@ -48,6 +48,10 @@ export class SemanticMatchingService {
       const days = userPreferences.matching_preferences?.preferred_commute_days?.map(d => d.toUpperCase()) || [];
       const segments = userPreferences.commute_segments || [];
 
+      if (!candidateUserIds || candidateUserIds.length === 0) {
+        return [];
+      }
+
       const pipeline = this.buildAggregationPipeline(
         userPreferences as unknown as IUserMatchingPreferences,
         weights,
@@ -59,7 +63,7 @@ export class SemanticMatchingService {
       );
 
       const results = await UserMatchingPreferences.aggregate(pipeline);
-
+     console.log("results",results);
       return results.map((result: any) => ({
         user: result as IUserMatchingPreferences,
         userFullName: result.userFullName || 'Unknown User',
@@ -155,268 +159,42 @@ export class SemanticMatchingService {
     candidateUserIds?: string[]
   ): any[] {
     const userEmbedding = userPreferences.embedding;
-    const userLanguages = (userPreferences.matching_preferences.languages || []).map(l => l.toLowerCase());
-    const userInterests = (userPreferences.matching_preferences.interests || []).map(i => i.toLowerCase());
-    const userProfession = userPreferences.matching_preferences.profession?.toLowerCase().trim() || '';
+    const filter = candidateUserIds && candidateUserIds.length > 0
+      ? { user: { $in: candidateUserIds.map(id => new mongoose.Types.ObjectId(id)) } }
+      : undefined;
+    console.log("filter",filter);
 
-    return [
-      // Stage 1: Vector search (MUST BE FIRST STAGE)
-      {
-        $vectorSearch: {
-          index: "vector_index",
-          path: "embedding",
-          queryVector: userEmbedding,
-          numCandidates: 100,
-          limit: 100
-        }
-      },
-
-      // Stage 2: Filter out current user and documents without embeddings
-      {
-        $match: {
-          _id: { $ne: new mongoose.Types.ObjectId(userPreferences._id) },
-          embedding: { $exists: true, $ne: [] }
-        }
-      },
-
-      // Stage 3a: Restrict to candidate users (from journeys) if provided
-      ...(candidateUserIds && candidateUserIds.length > 0 ? [{
-        $match: {
-          user: { $in: candidateUserIds.map(id => new mongoose.Types.ObjectId(id)) }
-        }
-      }] : []),
-
-      // Stage 3b: Filter by commute days overlap (only if user specified days)
-      ...(days.length > 0 ? [{
-        $match: {
-          'matching_preferences.preferred_commute_days': { $in: days }
-        }
-      }] : []),
-
-      // Stage 4: (Removed strict time-overlap filtering to avoid excluding candidates without segments)
-
-      // Stage 5: Calculate similarity scores
-      {
-        $addFields: {
-          semSim: { $ifNull: ["$score", 0] },
-          daysInter: {
-            $setIntersection: [
-              { $map: { input: "$matching_preferences.preferred_commute_days", as: "d", in: { $toUpper: "$$d" } } },
-              days
-            ]
-          },
-          daysUnion: {
-            $setUnion: [
-              { $map: { input: "$matching_preferences.preferred_commute_days", as: "d", in: { $toUpper: "$$d" } } },
-              days
-            ]
-          },
-          langInter: {
-            $setIntersection: [
-              { $map: { input: "$matching_preferences.languages", as: "l", in: { $toLower: "$$l" } } },
-              userLanguages
-            ]
-          },
-          langUnion: {
-            $setUnion: [
-              { $map: { input: "$matching_preferences.languages", as: "l", in: { $toLower: "$$l" } } },
-              userLanguages
-            ]
-          },
-          intsInter: {
-            $setIntersection: [
-              { $map: { input: "$matching_preferences.interests", as: "i", in: { $toLower: "$$i" } } },
-              userInterests
-            ]
-          },
-          intsUnion: {
-            $setUnion: [
-              { $map: { input: "$matching_preferences.interests", as: "i", in: { $toLower: "$$i" } } },
-              userInterests
-            ]
-          },
-          profMatch: {
-            $cond: [
-              {
-                $eq: [
-                  { $toLower: "$matching_preferences.profession" },
-                  userProfession
-                ]
-              },
-              1,
-              0
-            ]
-          }
-        }
-      },
-
-      // Stage 5: Calculate Jaccard similarities
-      {
-        $addFields: {
-          dayJac: {
-            $cond: [
-              { $gt: [{ $size: "$daysUnion" }, 0] },
-              { $divide: [{ $size: "$daysInter" }, { $size: "$daysUnion" }] },
-              0
-            ]
-          },
-          langJac: {
-            $cond: [
-              { $gt: [{ $size: "$langUnion" }, 0] },
-              { $divide: [{ $size: "$langInter" }, { $size: "$langUnion" }] },
-              0
-            ]
-          },
-          intsJac: {
-            $cond: [
-              { $gt: [{ $size: "$intsUnion" }, 0] },
-              { $divide: [{ $size: "$intsInter" }, { $size: "$intsUnion" }] },
-              0
-            ]
-          }
-        }
-      },
-
-      // Stage 6: Calculate time overlap ratio
-      {
-        $addFields: {
-          _timeCalc: {
-            $let: {
-              vars: { ts: "$commute_segments" },
-              in: {
-                overlap: {
-                  $sum: {
-                    $map: {
-                      input: "$ts",
-                      as: "s",
-                      in: {
-                        $sum: segments.map(([qs, qe]) => ({
-                          $max: [0, {
-                            $subtract: [
-                              { $min: [{ $arrayElemAt: ["$s", 1] }, qe] },
-                              { $max: [{ $arrayElemAt: ["$s", 0] }, qs] }
-                            ]
-                          }]
-                        }))
-                      }
-                    }
-                  }
-                },
-                durU: segments.reduce((a, [s, e]) => a + (e - s), 0),
-                durV: {
-                  $sum: {
-                    $map: {
-                      input: "$ts",
-                      as: "s",
-                      in: {
-                        $subtract: [
-                          { $arrayElemAt: ["$s", 1] },
-                          { $arrayElemAt: ["$s", 0] }
-                        ]
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-
-      // Stage 7: Calculate final time ratio
-      {
-        $addFields: {
-          timeRatio: {
-            $let: {
-              vars: {
-                denom: {
-                  $max: [
-                    { $ifNull: ["$_timeCalc.durU", 1] },
-                    { $ifNull: ["$_timeCalc.durV", 1] },
-                    1
-                  ]
-                }
-              },
-              in: {
-                $min: [
-                  { $divide: ["$_timeCalc.overlap", "$denom"] },
-                  1
-                ]
-              }
-            }
-          }
-        }
-      },
-
-      // Stage 8: Calculate hybrid score
-      {
-        $addFields: {
-          hybridScore: {
-            $add: [
-              { $multiply: [weights.time, "$timeRatio"] },
-              { $multiply: [weights.days, "$dayJac"] },
-              { $multiply: [weights.lang, "$langJac"] },
-              { $multiply: [weights.ints, "$intsJac"] },
-              { $multiply: [weights.sem, "$semSim"] },
-              { $multiply: [weights.prof, "$profMatch"] }
-            ]
-          }
-        }
-      },
-
-      // Stage 9: Filter by minimum score
-      {
-        $match: {
-          hybridScore: { $gte: minScore }
-        }
-      },
-
-      // Stage 10: Sort and limit
-      {
-        $sort: { hybridScore: -1 }
-      },
-      {
-        $limit: limit
-      },
-
-      // Stage 11: Lookup user information to get full name
-      {
-        $lookup: {
-          from: "users",
-          localField: "user",
-          foreignField: "_id",
-          as: "userInfo"
-        }
-      },
-
-      // Stage 12: Extract user full name
-      {
-        $addFields: {
-          userFullName: {
-            $ifNull: [
-              { $arrayElemAt: ["$userInfo.full_name", 0] },
-              "Unknown User"
-            ]
-          }
-        }
-      },
-
-      // Stage 13: Clean up output
-      {
-        $project: {
-          embedding: 0,
-          embedding_text: 0,
-          _timeCalc: 0,
-          daysInter: 0,
-          daysUnion: 0,
-          langInter: 0,
-          langUnion: 0,
-          intsInter: 0,
-          intsUnion: 0,
-          userInfo: 0
-        }
+    const vectorStage: any = {
+      $vectorSearch: {
+        index: "vector_index",
+        path: "embedding",
+        queryVector: userEmbedding,
+        numCandidates: 100,
+        limit: limit
       }
-    ];
+    };
+
+    if (filter) {
+      vectorStage.$vectorSearch.filter = filter;
+    }
+    console.log("vectorStage",vectorStage);
+
+    // Project vector search score and a human-friendly percentage
+    const projectStage: any = {
+      $project: {
+        user: 1,
+        matching_preferences: 1,
+        embedding_text: 1,
+        commute_segments: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        // semSim aligns with existing mapping usage
+        semSim: { $meta: "vectorSearchScore" },
+        matchPercent: { $round: [{ $multiply: [{ $meta: "vectorSearchScore" }, 100] }, 2] }
+      }
+    };
+
+    return [vectorStage, projectStage];
   }
 
   async getSimilarityMetrics(userId1: string, userId2: string): Promise<{

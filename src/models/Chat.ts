@@ -64,16 +64,7 @@ chatSchema.index({ participants: 1 });
 chatSchema.index({ chatType: 1, isActive: 1 });
 chatSchema.index({ 'lastMessage.timestamp': -1 });
 
-// Compound index for direct chats to prevent duplicates
-chatSchema.index({ 
-  chatType: 1, 
-  participants: 1 
-}, { 
-  unique: true, 
-  partialFilterExpression: { 
-    chatType: ChatType.DIRECT 
-  } 
-});
+
 
 // Virtual for populate participant details
 chatSchema.virtual('participantDetails', {
