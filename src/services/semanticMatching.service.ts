@@ -22,8 +22,12 @@ export class SemanticMatchingService {
     try {
       const journeyResults = await this.findSimilarJourneyUsersByUserId(query.userId, query.departure_time, query.route_id, query.travel_mode);
       console.log(journeyResults);
-      const candidateUserIds = journeyResults.map(r => r.userId);
+      const candidateUserIds = journeyResults
+        .map(r => r.userId)
+        .filter(id => id != query.userId);
       console.log("candidateUserIds",candidateUserIds);
+
+      
       const userPreferences = await this.repository.findByUserId(query.userId);
       if (!userPreferences) {
         throw new AppError('User preferences not found', 404);
@@ -179,6 +183,25 @@ export class SemanticMatchingService {
     }
     console.log("vectorStage",vectorStage);
 
+    // Lookup user to get display name
+    const lookupUserStage: any = {
+      $lookup: {
+        from: 'users',
+        let: { userId: '$user' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$_id', '$$userId'] } } },
+          { $project: { _id: 0, full_name: 1 } }
+        ],
+        as: 'userDoc'
+      }
+    };
+
+    const addUserNameStage: any = {
+      $addFields: {
+        userFullName: { $ifNull: [{ $arrayElemAt: ['$userDoc.full_name', 0] }, null] }
+      }
+    };
+
     // Project vector search score and a human-friendly percentage
     const projectStage: any = {
       $project: {
@@ -188,13 +211,14 @@ export class SemanticMatchingService {
         commute_segments: 1,
         createdAt: 1,
         updatedAt: 1,
+        userFullName: 1,
         // semSim aligns with existing mapping usage
         semSim: { $meta: "vectorSearchScore" },
         matchPercent: { $round: [{ $multiply: [{ $meta: "vectorSearchScore" }, 100] }, 2] }
       }
     };
 
-    return [vectorStage, projectStage];
+    return [vectorStage, lookupUserStage, addUserNameStage, projectStage];
   }
 
   async getSimilarityMetrics(userId1: string, userId2: string): Promise<{
