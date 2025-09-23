@@ -26,9 +26,9 @@
     "test:db-integration": "jest tests/integration/database.integration.test.ts",
     "test:socket-integration": "jest tests/integration/socket.integration.test.ts",
     "test:e2e": "jest tests/e2e/user-journey.e2e.test.ts",
-    "start": "node dist/index.js",
-    "dev": "nodemon --watch src --exec \"npx ts-node src/index.ts\"",
-    "build": "rimraf dist && tsc",
+    "start": "node init && node dist/index.js",
+    "dev": "node init && nodemon --watch src --exec \"npx ts-node src/index.ts\"",
+    "build": "node init && rimraf dist && tsc",
     "postinstall": "npm run build"
   },
   "keywords": [],
